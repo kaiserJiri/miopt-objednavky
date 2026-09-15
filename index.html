@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MI.OPTICS — Objednávkový systém</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --bg: #f1f5f9;
+    --card: #fff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --success: #16a34a;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+    --brand-color: #e07b39;
+    --red-accent: #d81e2c;
+    --red-accent-hover: #b91622;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  /* ── LOGIN ── */
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); }
+  .login-box { background: var(--card); border-radius: 16px; padding: 48px 40px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .login-brand { font-size: 13px; color: var(--brand-color); font-weight: 700; letter-spacing: .3px; margin-bottom: 4px; }
+  .login-brand span { color: #6b7280; font-weight: 400; }
+  .login-box h1 { font-size: 26px; font-weight: 700; margin-bottom: 24px; color: var(--text); }
+  .field { margin-bottom: 15px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+  .field input { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: border-color .15s; }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; transition: background .15s; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .login-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 18px; line-height: 1.6; }
+
+  /* ── APP ── */
+  #app { display: none; }
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 230px; background: #111827; color: #fff; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+  .sidebar-logo { padding: 22px 18px 18px; border-bottom: 1px solid #1f2937; }
+  .sidebar-logo .brand { font-size: 16px; font-weight: 800; }
+  .sidebar-logo .brand em { color: #60a5fa; font-style: normal; }
+  .sidebar-logo .sub { font-size: 10px; color: #4b5563; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+  .sidebar nav { flex: 1; padding: 14px 10px; }
+  .nav-section { font-size: 10px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: .8px; padding: 0 8px; margin: 14px 0 6px; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 7px; cursor: pointer; font-size: 13px; color: #9ca3af; transition: all .15s; margin-bottom: 2px; }
+  .nav-item:hover { background: #1f2937; color: #e5e7eb; }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-item .ico { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-user { padding: 14px 18px; border-top: 1px solid #1f2937; }
+  .rep-name { font-size: 13px; font-weight: 600; color: #f3f4f6; }
+  .rep-email { font-size: 11px; color: #6b7280; margin-top: 1px; }
+  .logout { font-size: 11px; color: #ef4444; cursor: pointer; margin-top: 8px; display: inline-block; }
+  .logout:hover { text-decoration: underline; }
+
+  /* Main */
+  .main { margin-left: 230px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 52px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 15px; font-weight: 700; flex: 1; }
+  .topbar-meta { font-size: 12px; color: var(--muted); }
+  .content { padding: 28px; }
+
+  /* Views */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Card */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-bottom: 18px; }
+
+  /* Steps */
+  .steps { display: flex; gap: 0; margin-bottom: 22px; }
+  .step { flex: 1; padding: 11px 8px; text-align: center; font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-right: none; }
+  .step:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; }
+  .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .step .sn { font-size: 16px; font-weight: 800; display: block; margin-bottom: 1px; }
+  .step.done { background: #eff6ff; color: var(--accent); border-color: #bfdbfe; }
+  .step.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+
+  /* Manufacturer grid */
+  .mfr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .mfr-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 14px; cursor: pointer; text-align: center; transition: all .12s; background: #fafafa; }
+  .mfr-card:hover:not(.disabled) { border-color: var(--accent); background: #fff; }
+  .mfr-card.selected { border-color: var(--accent); background: #eff6ff; }
+  .mfr-card.selected.red-brand { border-color: var(--red-accent); background: #fef2f2; }
+  .mfr-card.disabled { opacity: .4; cursor: not-allowed; }
+  .mfr-name { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+  .mfr-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .mfr-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-top: 10px; }
+  .b-ok { background: #dcfce7; color: #15803d; }
+  .b-soon { background: #fef9c3; color: #a16207; }
+
+  /* Product table */
+  .ptable { width: 100%; border-collapse: collapse; }
+  .ptable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); }
+  .ptable td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .ptable tbody tr:last-child td { border-bottom: none; }
+  .ptable tr.pr { cursor: pointer; transition: background .1s; }
+  .ptable tr.pr:hover { background: #f9fafb; }
+  .ptable tr.pr.sel { background: #eff6ff; }
+  .ptable tr.grp td { background: #f9fafb; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 6px 12px; cursor: default; }
+  .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); display: inline-block; vertical-align: middle; position: relative; }
+  .sel .radio { border-color: var(--accent); background: var(--accent); }
+  .sel .radio::after { content: ''; position: absolute; top: 3px; left: 3px; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+  .code { font-family: monospace; color: var(--muted); font-size: 12px; }
+  .dia-pills { display: flex; flex-wrap: wrap; gap: 3px; }
+  .dia-pill { background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+
+  /* Rx */
+  .rx-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .eye-title { font-size: 13px; font-weight: 700; margin-bottom: 13px; display: flex; align-items: center; gap: 7px; }
+  .eye-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #fff; }
+  .eye-r { background: var(--accent); }
+  .eye-l { background: #7c3aed; }
+  .rx-row { display: grid; gap: 10px; margin-bottom: 10px; }
+  .rx-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .rx-2 { grid-template-columns: 1fr 1fr; }
+  .rx-field label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .rx-field select, .rx-field input {
+    width: 100%; padding: 7px 9px; border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 13px; outline: none;
+    background: #fafafa; color: var(--text); transition: border-color .12s, background .12s;
+  }
+  .rx-field select:focus, .rx-field input:focus { border-color: var(--accent); background: #fff; }
+  .rx-field select:disabled { background: #f3f4f6; color: #c0c4cc; cursor: not-allowed; }
+  .rx-divider { border-top: 1px solid var(--border); margin: 14px 0; }
+  .rx-warn { font-size: 11px; color: var(--red-accent); margin-top: 5px; line-height: 1.4; }
+
+  /* Recap */
+  .rtable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rtable td { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .rtable tr:last-child td { border: none; }
+  .rtable td:first-child { color: var(--muted); width: 42%; }
+  .rtable td:last-child { font-weight: 600; }
+  .rtable .sub-hdr td { padding-top: 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border: none; }
+
+  /* Action bar */
+  .abar { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+  .btn-sec { padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; background: #fff; color: var(--text); transition: background .12s; }
+  .btn-sec:hover { background: #f3f4f6; }
+  .btn-go { padding: 8px 20px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; margin-left: auto; transition: background .12s; }
+  .btn-go:hover { background: var(--accent-hover); }
+  .btn-go:disabled { background: #c0c4cc; cursor: not-allowed; }
+  .btn-send { background: var(--success); }
+  .btn-send:hover { background: #15803d; }
+
+  /* History */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .stat-n { font-size: 24px; font-weight: 800; }
+  .stat-l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+  .c-blue .stat-n { color: var(--accent); }
+  .c-green .stat-n { color: var(--success); }
+  .c-orange .stat-n { color: #f59e0b; }
+  .c-purple .stat-n { color: #7c3aed; }
+  .htable { width: 100%; border-collapse: collapse; }
+  .htable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); }
+  .htable td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  .htable tbody tr:last-child td { border: none; }
+  .sbadge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .s-wait { background: #fef9c3; color: #a16207; }
+  .s-ship { background: #dbeafe; color: #1d4ed8; }
+  .s-done { background: #dcfce7; color: #15803d; }
+
+  /* Success */
+  .success-box { text-align: center; padding: 52px 24px; }
+  .success-box .icon { font-size: 48px; margin-bottom: 14px; }
+  .success-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .success-box p { color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">MI.OPTICS <span>· objednávkový systém</span></div>
+    <h1>Přihlásit se</h1>
+    <div class="field"><label>E-mail</label><input type="email" id="login-email" value="novak@mi-optics.cz"></div>
+    <div class="field"><label>Heslo</label><input type="password" id="login-pass" value="demo1234"></div>
+    <button class="btn-primary" onclick="doLogin()">Přihlásit se</button>
+    <p class="login-note">Demo prostředí — přihlášení je simulované.<br>Účty obchodních zástupců zakládá administrátor.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="brand"><em>MI</em>.OPTICS</div>
+        <div class="sub">Objednávkový systém</div>
+      </div>
+      <nav>
+        <div class="nav-section">Objednávky</div>
+        <div class="nav-item active" id="nav-new" onclick="showView('new')"><span class="ico">＋</span>Nová objednávka</div>
+        <div class="nav-item" id="nav-hist" onclick="showView('hist')"><span class="ico">📋</span>Historie</div>
+        <div class="nav-section">Účet</div>
+        <div class="nav-item" id="nav-prof" onclick="showView('prof')"><span class="ico">👤</span>Profil</div>
+      </nav>
+      <div class="sidebar-user">
+        <div class="rep-name">Pavel Nováček</div>
+        <div class="rep-email">novak@mi-optics.cz</div>
+        <span class="logout" onclick="doLogout()">← Odhlásit se</span>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title" id="topbar-title">Nová objednávka</div>
+        <div class="topbar-meta" id="topbar-meta"></div>
+      </div>
+
+      <div class="content">
+
+        <!-- NEW ORDER -->
+        <div class="view active" id="view-new">
+
+          <div class="steps">
+            <div class="step active" id="step-0"><span class="sn">1</span>Výrobce</div>
+            <div class="step" id="step-1"><span class="sn">2</span>Čočka</div>
+            <div class="step" id="step-2"><span class="sn">3</span>Parametry Rx</div>
+            <div class="step" id="step-3"><span class="sn">4</span>Rekapitulace</div>
+          </div>
+
+          <!-- S0 -->
+          <div id="s0">
+            <div class="card">
+              <div class="card-title">Vyberte výrobce</div>
+              <div class="mfr-grid">
+                <div class="mfr-card selected" id="mfr-mi" onclick="selMfr(this,'mi')">
+                  <div class="mfr-name">MI.OPTICS</div>
+                  <div class="mfr-desc">Skladové jednoohniskové čočky</div>
+                  <span class="mfr-badge b-ok">✓ Dostupné</span>
+                </div>
+                <div class="mfr-card red-brand" id="mfr-red" onclick="selMfr(this,'red')">
+                  <div class="mfr-name" style="color:var(--red-accent)">RED Label</div>
+                  <div class="mfr-desc">Zakázkové čočky — Ø průměr se řídí Sph/Cyl dle rozsahové tabulky</div>
+                  <span class="mfr-badge b-ok">✓ Dostupné</span>
+                </div>
+                <div class="mfr-card disabled">
+                  <div class="mfr-name">Výrobce C</div>
+                  <div class="mfr-desc">Plná konfigurace — doplní se po dodání podkladů</div>
+                  <span class="mfr-badge b-soon">Připravuje se</span>
+                </div>
+              </div>
+            </div>
+            <div class="abar"><button class="btn-go" onclick="goStep(1)">Pokračovat →</button></div>
+          </div>
+
+          <!-- S1 -->
+          <div id="s1" style="display:none">
+            <div class="card">
+              <div class="card-title">Vyberte čočku</div>
+              <table class="ptable">
+                <thead id="prod-thead"></thead>
+                <tbody id="prod-tbody"></tbody>
+              </table>
+            </div>
+            <div class="abar">
+              <button class="btn-sec" onclick="goStep(0)">← Zpět</button>
+              <button class="btn-go" id="btn-to-rx" onclick="goStep(2)" disabled>Pokračovat →</button>
+            </div>
+          </div>
+
+          <!-- S2 -->
+          <div id="s2" style="display:none">
+            <div class="card">
+              <div class="card-title">Parametry Rx</div>
+              <div class="rx-wrap">
+                <div>
+                  <div class="eye-title"><div class="eye-dot eye-r">P</div>Pravé oko</div>
+                  <div class="rx-row rx-3">
+                    <div class="rx-field"><label>Sph</label><select id="r-sph" onchange="onRxChange('r')"></select></div>
+                    <div class="rx-field"><label>Cyl</label><select id="r-cyl" onchange="onRxChange('r')"></select></div>
+                    <div class="rx-field"><label>Osa °</label><select id="r-ax" disabled></select></div>
+                  </div>
+                  <div class="rx-row rx-2">
+                    <div class="rx-field"><label>Průměr (mm)</label><select id="r-dia"></select></div>
+                    <div class="rx-field"><label>Výška (mm)</label><input type="number" id="r-h" placeholder="18" min="10" max="35"></div>
+                  </div>
+                  <div class="rx-warn" id="r-dia-warn" style="display:none"></div>
+                </div>
+                <div>
+                  <div class="eye-title"><div class="eye-dot eye-l">L</div>Levé oko</div>
+                  <div class="rx-row rx-3">
+                    <div class="rx-field"><label>Sph</label><select id="l-sph" onchange="onRxChange('l')"></select></div>
+                    <div class="rx-field"><label>Cyl</label><select id="l-cyl" onchange="onRxChange('l')"></select></div>
+                    <div class="rx-field"><label>Osa °</label><select id="l-ax" disabled></select></div>
+                  </div>
+                  <div class="rx-row rx-2">
+                    <div class="rx-field"><label>Průměr (mm)</label><select id="l-dia"></select></div>
+                    <div class="rx-field"><label>Výška (mm)</label><input type="number" id="l-h" placeholder="18" min="10" max="35"></div>
+                  </div>
+                  <div class="rx-warn" id="l-dia-warn" style="display:none"></div>
+                </div>
+              </div>
+              <div class="rx-divider"></div>
+              <div class="rx-row rx-2" style="max-width:460px">
+                <div class="rx-field"><label>Počet párů</label>
+                  <select id="pairs"><option value="1">1 pár</option><option value="2">2 páry</option><option value="3">3 páry</option></select>
+                </div>
+                <div class="rx-field"><label>Poznámka</label><input type="text" id="note" placeholder="Volitelný komentář..."></div>
+              </div>
+            </div>
+            <div class="abar">
+              <button class="btn-sec" onclick="goStep(1)">← Zpět</button>
+              <button class="btn-go" id="btn-to-recap" onclick="goStep(3)">Rekapitulace →</button>
+            </div>
+          </div>
+
+          <!-- S3 -->
+          <div id="s3" style="display:none">
+            <div class="card">
+              <div class="card-title">Rekapitulace objednávky</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
+                <div>
+                  <table class="rtable">
+                    <tr class="sub-hdr"><td colspan="2">Čočka</td></tr>
+                    <tr><td>Výrobce</td><td id="rec-mfr">—</td></tr>
+                    <tr><td>Produkt</td><td id="rec-prod">—</td></tr>
+                    <tr><td>Kód</td><td id="rec-code">—</td></tr>
+                    <tr><td>Index</td><td id="rec-idx">—</td></tr>
+                    <tr><td>Úprava</td><td id="rec-coat">—</td></tr>
+                    <tr><td>Počet párů</td><td id="rec-pairs">—</td></tr>
+                    <tr><td>Poznámka</td><td id="rec-note">—</td></tr>
+                  </table>
+                </div>
+                <div>
+                  <table class="rtable">
+                    <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
+                    <tr><td>Sph</td><td id="rec-rsph">—</td><td id="rec-lsph">—</td></tr>
+                    <tr><td>Cyl</td><td id="rec-rcyl">—</td><td id="rec-lcyl">—</td></tr>
+                    <tr><td>Osa</td><td id="rec-rax">—</td><td id="rec-lax">—</td></tr>
+                    <tr><td>Průměr</td><td id="rec-rdia">—</td><td id="rec-ldia">—</td></tr>
+                    <tr><td>Výška</td><td id="rec-rh">—</td><td id="rec-lh">—</td></tr>
+                  </table>
+                  <div style="margin-top:14px;padding:12px;background:#f9fafb;border-radius:var(--radius);border:1px solid var(--border)">
+                    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Obchodní zástupce</div>
+                    <div style="font-weight:600;font-size:13px">Pavel Nováček</div>
+                    <div style="font-size:12px;color:var(--muted)">novak@mi-optics.cz</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="abar">
+              <button class="btn-sec" onclick="goStep(2)">← Zpět</button>
+              <button class="btn-go btn-send" onclick="submitOrder()">✓ Odeslat objednávku</button>
+            </div>
+          </div>
+
+          <!-- Success -->
+          <div id="s-ok" style="display:none">
+            <div class="card">
+              <div class="success-box">
+                <div class="icon">✅</div>
+                <h2>Objednávka odeslána!</h2>
+                <p>Potvrzení bylo zapsáno do systému.</p>
+                <button class="btn-primary" style="width:auto;padding:10px 26px" onclick="resetOrder()">+ Nová objednávka</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="view" id="view-hist">
+          <div class="stats">
+            <div class="stat c-blue"><div class="stat-n">31</div><div class="stat-l">Objednávek celkem</div></div>
+            <div class="stat c-green"><div class="stat-n">27</div><div class="stat-l">Doručeno</div></div>
+            <div class="stat c-orange"><div class="stat-n">3</div><div class="stat-l">Odesláno</div></div>
+            <div class="stat c-purple"><div class="stat-n">1</div><div class="stat-l">Čeká</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Přehled objednávek</div>
+            <table class="htable">
+              <thead><tr><th>Č.</th><th>Datum</th><th>Zákazník</th><th>Produkt</th><th>Kód</th><th>Stav</th></tr></thead>
+              <tbody>
+                <tr><td>#3124</td><td>13. 9. 2026</td><td>Optika Svoboda, Praha 6</td><td>Plast 1,61 Super AR</td><td class="code">305.014</td><td><span class="sbadge s-wait">Čeká</span></td></tr>
+                <tr><td>#3123</td><td>11. 9. 2026</td><td>Oční optika Dvořák, Plzeň</td><td>Plast 1,56 Digital Lotus Max</td><td class="code">310.083</td><td><span class="sbadge s-ship">Odesláno</span></td></tr>
+                <tr><td>#3122</td><td>10. 9. 2026</td><td>Optika Horní, Domažlice</td><td>Plast 1,5 Super AR</td><td class="code">305.011</td><td><span class="sbadge s-ship">Odesláno</span></td></tr>
+                <tr><td>#3121</td><td>08. 9. 2026</td><td>Optika Marek, Tachov</td><td>Plast Photoactive 1,56 Super AR</td><td class="code">305.023</td><td><span class="sbadge s-done">Doručeno</span></td></tr>
+                <tr><td>#3120</td><td>05. 9. 2026</td><td>Oční centrum Procházka, Klatovy</td><td>Plast 1,61 AS Super AR</td><td class="code">305.015</td><td><span class="sbadge s-done">Doručeno</span></td></tr>
+                <tr><td>#3119</td><td>03. 9. 2026</td><td>Oční optika Dvořák, Plzeň</td><td>Plast 1,50 Lotus Max</td><td class="code">309.071</td><td><span class="sbadge s-done">Doručeno</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="view" id="view-prof">
+          <div class="card" style="max-width:440px">
+            <div class="card-title">Profil obchodního zástupce</div>
+            <table class="rtable">
+              <tr><td>Jméno</td><td>Pavel Nováček</td></tr>
+              <tr><td>E-mail</td><td>novak@mi-optics.cz</td></tr>
+              <tr><td>Telefon</td><td>+420 379 433 912</td></tr>
+              <tr><td>Region</td><td>Plzeňský kraj, Jihočeský kraj</td></tr>
+              <tr><td>Zákazníků</td><td>5</td></tr>
+              <tr><td>Objednávek (2026)</td><td>31</td></tr>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MI_PRODUCTS = [
+  { name: 'Plast 1,5 HC',                    code: '305.010', index: '1,5',              coat: 'Tvrdení (HC)',                                 dias: ['60','65','70'] },
+  { name: 'Plast 1,5 Super AR',              code: '305.011', index: '1,5',              coat: 'Tvrdení + Super AR',                           dias: ['60','65','70'] },
+  { name: 'Plast 1,56 Super AR',             code: '305.013', index: '1,56',             coat: 'Tvrdení + Super AR',                           dias: ['65','70'] },
+  { name: 'Plast Photoactive 1,56 Super AR', code: '305.023', index: '1,56',             coat: 'Fototropní (hnědá/šedá 9–70 %) + Super AR',    dias: ['65','70'] },
+  { name: 'Plast 1,61 Super AR',             code: '305.014', index: '1,61',             coat: 'Tvrdení + Super AR',                           dias: ['65','73'] },
+  { name: 'Plast 1,61 AS Super AR',          code: '305.015', index: '1,61 (asférická)', coat: 'Tvrdení + Super AR',                           dias: ['65','73'] },
+  { name: 'Plast 1,56 Digital Lotus Max',    code: '310.083', index: '1,56',             coat: 'BLC technologie + Lotus Max',                  dias: ['65','70'] },
+  { name: 'Plast 1,50 Lotus Max',            code: '309.071', index: '1,5',              coat: 'Lotus Max',                                    dias: ['65','70'] },
+  { name: 'Plast 1,61 Lotus Max',            code: '309.074', index: '1,61',             coat: 'Lotus Max',                                    dias: ['65','70','75'] },
+];
+
+/* ── RED LABEL: data digitalizovaná 1:1 z rozsahy_RED.pdf (24 produktů, Sph×Cyl → Ø) ── */
+const RED_PRODUCTS = [{"id":0,"family":"Org","index":"1,5","desc":"","title":"Red Org 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0},{"id":1,"family":"Org","index":"1,5","desc":"Hard","title":"Red Org 1,5 Hard","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":2,"family":"Org","index":"1,5","desc":"SHC","title":"Red Org 1,5 SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0},{"id":3,"family":"Org","index":"1,5","desc":"Mini SHC","title":"Red Org 1,5 Mini SHC","sphMin":-0.75,"sphMax":7.25,"cylMax":3.0},{"id":4,"family":"Org","index":"1,5","desc":"Maxi Kids","title":"Red Org 1,5 Maxi Kids","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":5,"family":"Org","index":"1,6","desc":"SHC","title":"Red Org 1,6 SHC","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0},{"id":6,"family":"Org","index":"1,6","desc":"AS SHC","title":"Red Org 1,6 AS SHC","sphMin":-11.75,"sphMax":5.25,"cylMax":3.0},{"id":7,"family":"Org","index":"1,67","desc":"SHC","title":"Red Org 1,67 SHC","sphMin":-8.75,"sphMax":5.25,"cylMax":3.0},{"id":8,"family":"Org","index":"1,67","desc":"AS SHC","title":"Red Org 1,67 AS SHC","sphMin":-12.75,"sphMax":5.25,"cylMax":4.0},{"id":9,"family":"Org","index":"1,5","desc":"UltimaS","title":"Red Org 1,5 UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":10,"family":"Org","index":"1,6","desc":"UltimaS","title":"Red Org 1,6 UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0},{"id":11,"family":"Org","index":"1,67","desc":"AS UltimaS","title":"Red Org 1,67 AS UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0},{"id":12,"family":"Org","index":"1,74","desc":"AS UltimaS","title":"Red Org 1,74 AS UltimaS","sphMin":-14.75,"sphMax":-3.75,"cylMax":4.0},{"id":13,"family":"Org","index":"1,5","desc":"BLC UltimaS","title":"Red Org 1,5 BLC UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":14,"family":"Org","index":"1,6","desc":"BLC UltimaS","title":"Red Org 1,6 BLC UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0},{"id":15,"family":"Org","index":"1,67","desc":"AS BLC UltimaS","title":"Red Org 1,67 AS BLC UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0},{"id":16,"family":"Org","index":"1,5","desc":"SHC Transitions","title":"Red Org 1,5 SHC Transitions","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0},{"id":17,"family":"Org","index":"1,5","desc":"SHC Transitions XTRActive","title":"Red Org 1,5 SHC Transitions XTRActive","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0},{"id":18,"family":"Org","index":"1,6","desc":"UltimaS Transitions","title":"Red Org 1,6 UltimaS Transitions","sphMin":-6.75,"sphMax":3.25,"cylMax":2.0},{"id":19,"family":"Tri","index":"1,53","desc":"SHC","title":"Red 1,53 Tri SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":20,"family":"Min","index":"1,5","desc":"","title":"Red Min 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":21,"family":"Min","index":"1,5","desc":"Photo SAR","title":"Red Min 1,5 Photo SAR","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0},{"id":22,"family":"Min","index":"1,5","desc":"SAR","title":"Red Min 1,5 SAR","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":23,"family":"Min","index":"1,6","desc":"SAR","title":"Red Min 1,6 SAR","sphMin":-4.75,"sphMax":5.25,"cylMax":2.0}];
+const RED_GRID = {"0":{"dias":[["65"],["65","70"],["70"]],"grid":[[0.0,[[5.25,3.25,0],[3.0,-0.5,1],[-0.75,-6.75,2]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.5,[[4.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.75,[[4.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.0,[[4.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.25,[[4.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.5,[[3.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.75,[[3.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[2.0,[[3.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[2.25,[[3.0,1.25,0],[1.0,-0.75,1]]],[2.5,[[2.75,1.0,0],[0.75,-0.75,1]]],[2.75,[[2.5,0.75,0],[0.5,-0.75,1]]],[3.0,[[2.25,0.5,0],[0.25,-0.75,1]]]]},"1":{"dias":[["55","60","65"],["55","60","65","70"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-6.75,2]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.5,[[4.75,3.0,0],[2.75,-0.75,1],[-1.0,-6.75,2]]],[0.75,[[4.5,2.75,0],[2.5,-0.75,1],[-1.0,-6.75,2]]],[1.0,[[4.25,2.5,0],[2.25,-0.75,1],[-1.0,-6.75,2]]],[1.25,[[4.0,2.25,0],[2.0,-0.75,1],[-1.0,-6.75,2]]],[1.5,[[3.75,2.0,0],[1.75,-0.75,1],[-1.0,-6.75,2]]],[1.75,[[3.5,1.75,0],[1.5,-0.75,1],[-1.0,-6.75,2]]],[2.0,[[3.25,1.5,0],[1.25,-0.75,1],[-1.0,-6.75,2]]]]},"2":{"dias":[["65","70"],["65","70","75"],["70","75"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-5.75,2],[-6.0,-6.75,3]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[0.5,[[4.75,3.0,0],[2.75,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[0.75,[[4.5,2.75,0],[2.5,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.0,[[4.25,2.5,0],[2.25,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.25,[[4.0,2.25,0],[2.0,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.5,[[3.75,2.0,0],[1.75,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.75,[[3.5,1.75,0],[1.5,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[2.0,[[3.25,1.5,0],[1.25,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[2.25,[[3.25,-0.75,0],[-1.0,-6.75,3]]],[2.5,[[3.25,-0.75,0],[-1.0,-6.75,3]]],[2.75,[[3.25,-0.75,0],[-1.0,-6.75,3]]],[3.0,[[3.25,-0.75,0],[-1.0,-6.75,3]]]]},"3":{"dias":[["50","55","60"],["55","60"]],"grid":[[0.0,[[7.25,-0.75,0]]],[0.25,[[7.0,-0.75,0]]],[0.5,[[6.75,-0.75,0]]],[0.75,[[6.5,-0.75,0]]],[1.0,[[6.25,-0.75,0]]],[1.25,[[6.0,-0.75,0]]],[1.5,[[5.75,-0.75,0]]],[1.75,[[5.5,-0.75,0]]],[2.0,[[5.25,-0.75,0]]],[2.25,[[5.0,-0.75,1]]],[2.5,[[4.75,-0.75,1]]],[2.75,[[4.5,-0.75,1]]],[3.0,[[4.25,-0.75,1]]]]},"4":{"dias":[["50","55","60","65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-6.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-6.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-6.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-6.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-6.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-6.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-6.75,1]]]]},"5":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-9.75,2],[-10.25,-10.25,2],[-10.75,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-9.0,2]]],[0.5,[[4.75,-1.0,0],[-1.25,-7.25,1],[-7.5,-9.25,2]]],[0.75,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-9.5,2]]],[1.0,[[4.25,-1.5,0],[-1.75,-7.75,1],[-8.0,-9.75,2]]],[1.25,[[4.0,-1.75,0],[-2.0,-8.0,1],[-8.25,-10.0,2]]],[1.5,[[3.75,-2.0,0],[-2.25,-8.25,1],[-8.5,-10.25,2]]],[1.75,[[3.5,-2.25,0],[-2.5,-8.5,1],[-8.75,-10.5,2]]],[2.0,[[3.25,-2.5,0],[-2.75,-8.75,1],[-9.0,-10.75,2]]]]},"6":{"dias":[["60","65"],["75"],["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-10.75,3]]],[0.25,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-11.0,3]]],[0.5,[[4.75,-0.75,0],[-1.0,-1.0,2],[-1.25,-7.25,1],[-7.5,-11.25,3]]],[0.75,[[4.5,-0.75,0],[-1.0,-1.25,2],[-1.5,-7.5,1],[-7.75,-11.5,3]]],[1.0,[[4.25,-0.75,0],[-1.0,-1.5,2],[-1.75,-7.75,1],[-8.0,-11.75,3]]],[1.25,[[4.0,-0.75,0],[-1.0,-1.75,2],[-2.0,-8.0,1],[-8.25,-10.0,3]]],[1.5,[[3.75,-0.75,0],[-1.0,-2.0,2],[-2.25,-8.25,1],[-8.5,-10.25,3]]],[1.75,[[3.5,-0.75,0],[-1.0,-2.25,2],[-2.5,-8.5,1],[-8.75,-10.5,3]]],[2.0,[[3.25,-0.75,0],[-1.0,-2.5,2],[-2.75,-8.75,1],[-9.0,-10.75,3]]],[2.25,[[-3.0,-9.0,1],[-9.25,-11.0,3]]],[2.5,[[-3.25,-9.25,1],[-9.5,-11.25,3]]],[2.75,[[-3.5,-9.5,1],[-9.75,-11.5,3]]],[3.0,[[-3.75,-9.75,1],[-10.0,-11.75,3]]]]},"7":{"dias":[["65"],["70"],["75"]],"grid":[[0.0,[[5.25,1.5,0],[1.25,-0.5,1],[-0.75,-7.75,2],[-8.0,-8.75,1]]],[0.25,[[5.0,1.25,0],[1.0,-0.75,1],[-1.0,-7.75,2],[-8.0,-8.75,1]]],[0.5,[[4.75,1.0,0],[0.75,-1.0,1],[-1.25,-8.0,2],[-8.25,-8.75,1]]],[0.75,[[4.5,0.75,0],[0.5,-1.25,1],[-1.5,-8.0,2],[-8.25,-8.75,1]]],[1.0,[[4.25,0.5,0],[0.25,-1.5,1],[-1.75,-8.25,2],[-8.5,-8.75,1]]],[1.25,[[4.0,0.25,0],[0.0,-1.75,1],[-2.0,-8.25,2],[-8.5,-8.75,1]]],[1.5,[[3.75,0.0,0],[-0.25,-2.0,1],[-2.25,-8.5,2],[-8.75,-8.75,1]]],[1.75,[[3.5,-0.25,0],[-0.5,-2.25,1],[-2.5,-8.5,2],[-8.75,-8.75,1]]],[2.0,[[3.25,-0.5,0],[-0.75,-2.5,1],[-2.75,-8.75,2]]],[2.25,[[3.0,-0.75,0],[-1.0,-2.75,1],[-3.0,-8.75,2]]],[2.5,[[2.75,-1.0,0],[-1.25,-3.0,1],[-3.25,-8.75,2]]],[2.75,[[2.5,-1.25,0],[-1.5,-3.25,1],[-3.5,-8.75,2]]],[3.0,[[2.25,-1.5,0],[-1.75,-3.5,1],[-3.75,-8.75,2]]]]},"8":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.75,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[0.5,[[4.75,-0.75,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[0.75,[[4.5,-0.75,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.0,[[4.25,-0.75,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[1.25,[[4.0,-0.75,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[1.5,[[3.75,-0.75,0],[-4.25,-8.25,1],[-8.5,-12.25,2]]],[1.75,[[3.5,-0.75,0],[-4.5,-8.5,1],[-8.75,-12.5,2]]],[2.0,[[3.25,-0.75,0],[-4.75,-8.75,1],[-9.0,-12.75,2]]],[2.25,[[-5.0,-9.0,1],[-9.25,-11.0,2]]],[2.5,[[-5.25,-9.25,1],[-9.5,-11.25,2]]],[2.75,[[-5.5,-9.5,1],[-9.75,-11.5,2]]],[3.0,[[-5.75,-9.75,1],[-10.0,-11.75,2]]],[3.25,[[-6.0,-10.0,1],[-10.25,-12.0,2]]],[3.5,[[-6.25,-10.25,1],[-10.5,-12.25,2]]],[3.75,[[-6.5,-10.5,1],[-10.75,-12.5,2]]],[4.0,[[-6.75,-10.75,1],[-11.0,-12.75,2]]]]},"9":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-1.0,0],[-1.25,-6.75,1]]],[0.75,[[4.5,-1.25,0],[-1.5,-6.75,1]]],[1.0,[[4.25,-1.5,0],[-1.75,-6.75,1]]],[1.25,[[4.0,-1.75,0],[-2.0,-6.75,1]]],[1.5,[[3.75,-2.0,0],[-2.25,-6.75,1]]],[1.75,[[3.5,-2.25,0],[-2.5,-6.75,1]]],[2.0,[[3.25,-2.5,0],[-2.75,-6.75,1]]]]},"10":{"dias":[["60","65"],["60","65","70"],["75"],["65"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-6.75,2],[-7.0,-9.75,4],[-10.25,-10.25,4],[-10.75,-10.75,4]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-7.0,2],[-7.25,-9.0,4]]],[0.5,[[4.75,3.0,0],[2.75,-0.75,1],[-1.0,-1.0,3],[-1.25,-7.25,2],[-7.5,-9.25,4]]],[0.75,[[4.5,2.75,0],[2.5,-0.75,1],[-1.0,-1.25,3],[-1.5,-7.5,2],[-7.75,-9.5,4]]],[1.0,[[4.25,2.5,0],[2.25,-0.75,1],[-1.0,-1.5,3],[-1.75,-7.75,2],[-8.0,-9.75,4]]],[1.25,[[4.0,2.25,0],[2.0,-0.75,1],[-1.0,-1.75,3],[-2.0,-8.0,2],[-8.25,-10.0,4]]],[1.5,[[3.75,2.0,0],[1.75,-0.75,1],[-1.0,-2.0,3],[-2.25,-8.25,2],[-8.5,-10.25,4]]],[1.75,[[3.5,1.75,0],[1.5,-0.75,1],[-1.0,-2.25,3],[-2.5,-8.5,2],[-8.75,-10.5,4]]],[2.0,[[3.25,1.5,0],[1.25,-0.75,1],[-1.0,-2.5,3],[-2.75,-8.75,2],[-9.0,-10.75,4]]]]},"11":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[0.5,[[4.75,-0.75,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[0.75,[[4.5,-0.75,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.0,[[4.25,-0.75,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[1.25,[[4.0,-0.75,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[1.5,[[3.75,-0.75,0],[-4.25,-8.25,1],[-8.5,-12.25,2]]],[1.75,[[3.5,-0.75,0],[-4.5,-8.5,1],[-8.75,-12.5,2]]],[2.0,[[3.25,-0.75,0],[-4.75,-8.75,1],[-9.0,-12.75,2]]]]},"12":{"dias":[["75"],["70"]],"grid":[[0.0,[[-3.75,-6.75,0],[-7.0,-10.75,1],[-11.25,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1],[-14.25,-14.25,1],[-14.75,-14.75,1]]],[0.25,[[-4.0,-7.0,0],[-7.25,-11.0,1],[-11.5,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1]]],[0.5,[[-4.25,-7.25,0],[-7.5,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1]]],[0.75,[[-4.5,-7.5,0],[-7.75,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1]]],[1.0,[[-4.75,-7.75,0],[-8.0,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1]]],[1.25,[[-5.0,-8.0,0],[-8.25,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1],[-14.0,-14.0,1]]],[1.5,[[-5.25,-8.25,0],[-8.5,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1],[-14.25,-14.25,1]]],[1.75,[[-5.5,-8.5,0],[-8.75,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1],[-14.0,-14.0,1],[-14.5,-14.5,1]]],[2.0,[[-5.75,-8.75,0],[-9.0,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1],[-14.25,-14.25,1],[-14.75,-14.75,1]]],[2.25,[[-6.0,-9.0,0],[-9.25,-11.0,1]]],[2.5,[[-6.25,-9.25,0],[-9.5,-11.25,1]]],[2.75,[[-6.5,-9.5,0],[-9.75,-11.5,1]]],[3.0,[[-6.75,-9.75,0],[-10.0,-11.75,1]]],[3.25,[[-7.0,-10.0,0],[-10.25,-12.0,1]]],[3.5,[[-7.25,-10.25,0],[-10.5,-12.25,1]]],[3.75,[[-7.5,-10.5,0],[-10.75,-12.5,1]]],[4.0,[[-7.75,-10.75,0],[-11.0,-12.75,1]]]]},"13":{"dias":[["65","70"],["70"]],"grid":[[0.0,[[5.25,-0.75,0],[-1.0,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-6.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-6.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-6.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-6.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-6.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-6.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-6.75,1]]]]},"14":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-9.75,2],[-10.25,-10.25,2],[-10.75,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-9.0,2]]],[0.5,[[4.75,-1.0,0],[-1.25,-7.25,1],[-7.5,-9.25,2]]],[0.75,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-9.5,2]]],[1.0,[[4.25,-1.5,0],[-1.75,-7.75,1],[-8.0,-9.75,2]]],[1.25,[[4.0,-1.75,0],[-2.0,-8.0,1],[-8.25,-10.0,2]]],[1.5,[[3.75,-2.0,0],[-2.25,-8.25,1],[-8.5,-10.25,2]]],[1.75,[[3.5,-2.25,0],[-2.5,-8.5,1],[-8.75,-10.5,2]]],[2.0,[[3.25,-2.5,0],[-2.75,-8.75,1],[-9.0,-10.75,2]]]]},"15":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[0.5,[[4.75,-0.75,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[0.75,[[4.5,-0.75,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.0,[[4.25,-0.75,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[1.25,[[4.0,-0.75,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[1.5,[[3.75,-0.75,0],[-4.25,-8.25,1],[-8.5,-12.25,2]]],[1.75,[[3.5,-0.75,0],[-4.5,-8.5,1],[-8.75,-12.5,2]]],[2.0,[[3.25,-0.75,0],[-4.75,-8.75,1],[-9.0,-12.75,2]]]]},"16":{"dias":[["65"],["70"]],"grid":[[0.0,[[3.25,-0.5,0],[-0.75,-4.75,1]]],[0.25,[[3.0,-0.5,0],[-0.75,-4.75,1]]],[0.5,[[2.75,-0.5,0],[-0.75,-4.75,1]]],[0.75,[[2.5,-0.5,0],[-0.75,-4.75,1]]],[1.0,[[2.25,-0.5,0],[-0.75,-4.75,1]]],[1.25,[[2.0,-0.5,0],[-0.75,-4.75,1]]],[1.5,[[1.75,-0.5,0],[-0.75,-4.75,1]]],[1.75,[[1.5,-0.5,0],[-0.75,-4.75,1]]],[2.0,[[1.25,-0.5,0],[-0.75,-4.75,1]]]]},"17":{"dias":[["65"],["70"]],"grid":[[0.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[0.25,[[3.0,-0.75,0],[-1.0,-4.75,1]]],[0.5,[[2.75,-0.75,0],[-1.0,-4.75,1]]],[0.75,[[2.5,-0.75,0],[-1.0,-4.75,1]]],[1.0,[[2.25,-0.75,0],[-1.0,-4.75,1]]],[1.25,[[2.0,-0.75,0],[-1.0,-4.75,1]]],[1.5,[[1.75,-0.75,0],[-1.0,-4.75,1]]],[1.75,[[1.5,-0.75,0],[-1.0,-4.75,1]]],[2.0,[[1.25,-0.75,0],[-1.0,-4.75,1]]]]},"18":{"dias":[["65"],["75"]],"grid":[[0.0,[[3.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[3.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[2.75,-1.0,0],[-1.25,-6.75,1]]],[0.75,[[2.5,-1.25,0],[-1.5,-6.75,1]]],[1.0,[[2.25,-1.5,0],[-1.75,-6.75,1]]],[1.25,[[2.0,-1.75,0],[-2.0,-6.75,1]]],[1.5,[[1.75,-2.0,0],[-2.25,-6.75,1]]],[1.75,[[1.5,-2.25,0],[-2.5,-6.75,1]]],[2.0,[[1.25,-2.5,0],[-2.75,-6.75,1]]]]},"19":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-1.0,0],[-1.25,-6.75,1]]],[0.75,[[4.5,-1.25,0],[-1.5,-6.75,1]]],[1.0,[[4.25,-1.5,0],[-1.75,-6.75,1]]],[1.25,[[4.0,-1.75,0],[-2.0,-6.75,1]]],[1.5,[[3.75,-2.0,0],[-2.25,-6.75,1]]],[1.75,[[3.5,-2.25,0],[-2.5,-6.75,1]]],[2.0,[[3.25,-2.5,0],[-2.75,-6.75,1]]]]},"20":{"dias":[["60","65"],["65","70"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-6.75,2]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.5,[[4.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.75,[[4.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.0,[[4.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.25,[[4.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.5,[[3.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.75,[[3.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[2.0,[[3.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]]]},"21":{"dias":[["65"],["70"]],"grid":[[0.0,[[3.25,-0.5,0],[-0.75,-4.75,1]]],[0.25,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[0.5,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[0.75,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.25,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.5,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.75,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]]]},"22":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-6.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-6.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-6.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-6.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-6.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-6.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-6.75,1]]]]},"23":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-4.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-4.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-4.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-4.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-4.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-4.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-4.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-4.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]]]}};
+
+function sphOptions() {
+  const o = [];
+  for (let v = -600; v <= 600; v += 25) {
+    const s = (v/100).toFixed(2);
+    o.push(`<option value="${s}">${v>=0?'+':''}${s}</option>`);
+  }
+  return o.join('');
+}
+function cylOptions() {
+  const o = ['<option value="0">0.00</option>'];
+  for (let v = -25; v >= -300; v -= 25) {
+    const s = (v/100).toFixed(2);
+    o.push(`<option value="${s}">${s}</option>`);
+  }
+  return o.join('');
+}
+function axOptions() {
+  const o = ['<option value="">—</option>'];
+  for (let i = 1; i <= 180; i++) o.push(`<option value="${i}">${i}°</option>`);
+  return o.join('');
+}
+
+/* generic range-based option builders used for RED Label products (rozsah se liší produkt od produktu) */
+function sphOptionsRange(min, max) {
+  const o = [];
+  const lo = Math.round(min*4), hi = Math.round(max*4);
+  for (let v = lo; v <= hi; v++) {
+    const s = (v/4).toFixed(2);
+    o.push(`<option value="${s}">${v>=0?'+':''}${s}</option>`);
+  }
+  return o.join('');
+}
+function cylOptionsRange(maxMag) {
+  const o = ['<option value="0">0.00</option>'];
+  const hi = Math.round(maxMag*4);
+  for (let v = 1; v <= hi; v++) {
+    const s = (-v/4).toFixed(2);
+    o.push(`<option value="${s}">${s}</option>`);
+  }
+  return o.join('');
+}
+
+document.getElementById('r-sph').innerHTML = sphOptions();
+document.getElementById('l-sph').innerHTML = sphOptions();
+document.getElementById('r-cyl').innerHTML = cylOptions();
+document.getElementById('l-cyl').innerHTML = cylOptions();
+document.getElementById('r-ax').innerHTML  = axOptions();
+document.getElementById('l-ax').innerHTML  = axOptions();
+['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
+
+let selectedMfr = 'mi';
+let selectedProd = null;
+
+function selMfr(el, key) {
+  document.querySelectorAll('.mfr-card:not(.disabled)').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMfr = key;
+}
+
+/* ── Product table (S1) — renders MI.OPTICS or RED Label rows depending on selected manufacturer ── */
+function renderProductTable() {
+  const thead = document.getElementById('prod-thead');
+  const tbody = document.getElementById('prod-tbody');
+  selectedProd = null;
+  document.getElementById('btn-to-rx').disabled = true;
+  tbody.innerHTML = '';
+
+  if (selectedMfr === 'red') {
+    thead.innerHTML = `<tr>
+      <th style="width:28px"></th>
+      <th>Produkt</th><th>Index</th><th>Provedení</th><th>Rozsah Sph</th><th>Cyl (max)</th>
+    </tr>`;
+    const groups = [['Org','Red Org — organické čočky'], ['Tri','Red Tri — trifokální'], ['Min','Red Min — minerální čočky']];
+    groups.forEach(([fam, label]) => {
+      const items = RED_PRODUCTS.filter(p => p.family === fam);
+      if (!items.length) return;
+      const grpTr = document.createElement('tr');
+      grpTr.className = 'grp';
+      grpTr.innerHTML = `<td colspan="6">${label}</td>`;
+      tbody.appendChild(grpTr);
+      items.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = 'pr';
+        const dispName = p.desc ? `${p.family} ${p.index} ${p.desc}` : `${p.family} ${p.index}`;
+        tr.innerHTML = `
+          <td><span class="radio"></span></td>
+          <td><strong>${dispName}</strong></td>
+          <td>${p.index}</td>
+          <td style="color:var(--muted);font-size:12px">${p.desc || '—'}</td>
+          <td>${p.sphMax>=0?'+':''}${p.sphMax.toFixed(2)} až ${p.sphMin>=0?'+':''}${p.sphMin.toFixed(2)}</td>
+          <td>−${p.cylMax.toFixed(2)}</td>
+        `;
+        tr.onclick = () => selectRedProduct(p, tr);
+        tbody.appendChild(tr);
+      });
+    });
+  } else {
+    thead.innerHTML = `<tr>
+      <th style="width:28px"></th>
+      <th>Produkt</th><th>Kód</th><th>Index</th><th>Úprava</th><th>Průměry</th>
+    </tr>`;
+    MI_PRODUCTS.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.className = 'pr';
+      tr.innerHTML = `
+        <td><span class="radio"></span></td>
+        <td><strong>${p.name}</strong></td>
+        <td class="code">${p.code}</td>
+        <td>${p.index}</td>
+        <td style="color:var(--muted);font-size:12px">${p.coat}</td>
+        <td><div class="dia-pills">${p.dias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
+      `;
+      tr.onclick = () => selectMiProduct(p, tr);
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+function selectMiProduct(p, tr) {
+  document.querySelectorAll('.pr').forEach(r => r.classList.remove('sel'));
+  tr.classList.add('sel');
+  selectedProd = Object.assign({ mfr: 'mi' }, p);
+  document.getElementById('btn-to-rx').disabled = false;
+  setupRxForProduct();
+}
+
+function selectRedProduct(p, tr) {
+  document.querySelectorAll('.pr').forEach(r => r.classList.remove('sel'));
+  tr.classList.add('sel');
+  selectedProd = Object.assign({ mfr: 'red' }, p);
+  document.getElementById('btn-to-rx').disabled = false;
+  setupRxForProduct();
+}
+
+/* ── Rx step setup — pro RED se rozsahy Sph/Cyl generují dle konkrétního produktu ── */
+function setupRxForProduct() {
+  ['r-ax','l-ax'].forEach(id => { const s = document.getElementById(id); s.selectedIndex = 0; s.disabled = true; });
+
+  if (selectedProd.mfr === 'red') {
+    const sphHtml = sphOptionsRange(selectedProd.sphMin, selectedProd.sphMax);
+    const cylHtml = cylOptionsRange(selectedProd.cylMax);
+    ['r-sph','l-sph'].forEach(id => {
+      const s = document.getElementById(id);
+      s.innerHTML = sphHtml;
+      let best = 0, bestDiff = Infinity;
+      for (let i=0;i<s.options.length;i++) {
+        const diff = Math.abs(parseFloat(s.options[i].value));
+        if (diff < bestDiff) { bestDiff = diff; best = i; }
+      }
+      s.selectedIndex = best;
+    });
+    ['r-cyl','l-cyl'].forEach(id => { document.getElementById(id).innerHTML = cylHtml; document.getElementById(id).selectedIndex = 0; });
+    updateRedDia('r');
+    updateRedDia('l');
+  } else {
+    document.getElementById('r-sph').innerHTML = sphOptions();
+    document.getElementById('l-sph').innerHTML = sphOptions();
+    document.getElementById('r-cyl').innerHTML = cylOptions();
+    document.getElementById('l-cyl').innerHTML = cylOptions();
+    ['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
+    const dh = selectedProd.dias.map(d=>`<option value="${d}">Ø${d} mm</option>`).join('');
+    document.getElementById('r-dia').innerHTML = dh;
+    document.getElementById('l-dia').innerHTML = dh;
+    document.getElementById('r-dia').disabled = false;
+    document.getElementById('l-dia').disabled = false;
+    document.getElementById('r-dia-warn').style.display = 'none';
+    document.getElementById('l-dia-warn').style.display = 'none';
+    document.getElementById('btn-to-recap').disabled = false;
+  }
+}
+
+/* ── RED Label: vyhledání dostupných Ø pro danou kombinaci Sph/Cyl dle digitalizovaných tabulek ── */
+function lookupRedDia(prodId, sph, cylMag) {
+  const g = RED_GRID[prodId];
+  if (!g) return null;
+  const col = g.grid.find(c => Math.abs(c[0]-cylMag) < 0.001);
+  if (!col) return null;
+  for (const [hi, lo, idx] of col[1]) {
+    if (sph <= hi+0.001 && sph >= lo-0.001) return g.dias[idx];
+  }
+  return null;
+}
+
+function updateRedDia(eye) {
+  if (!selectedProd || selectedProd.mfr !== 'red') return;
+  const sph = parseFloat(document.getElementById(eye+'-sph').value);
+  const cyl = parseFloat(document.getElementById(eye+'-cyl').value);
+  const cylMag = Math.abs(cyl);
+  const diaSel = document.getElementById(eye+'-dia');
+  const warn = document.getElementById(eye+'-dia-warn');
+  const dias = lookupRedDia(selectedProd.id, sph, cylMag);
+  if (dias) {
+    diaSel.innerHTML = dias.map(d=>`<option value="${d}">Ø${d} mm</option>`).join('');
+    diaSel.disabled = false;
+    warn.style.display = 'none';
+  } else {
+    diaSel.innerHTML = '<option value="">— nedostupné —</option>';
+    diaSel.disabled = true;
+    warn.textContent = 'Tato kombinace Sph/Cyl není pro zvolenou čočku RED Label dostupná.';
+    warn.style.display = 'block';
+  }
+  updateRecapButtonState();
+}
+
+function updateRecapButtonState() {
+  const btn = document.getElementById('btn-to-recap');
+  if (!selectedProd || selectedProd.mfr !== 'red') { btn.disabled = false; return; }
+  const rOk = document.getElementById('r-dia').value !== '';
+  const lOk = document.getElementById('l-dia').value !== '';
+  btn.disabled = !(rOk && lOk);
+}
+
+function onRxChange(eye) {
+  updateAxis(eye);
+  if (selectedProd && selectedProd.mfr === 'red') updateRedDia(eye);
+}
+
+function updateAxis(eye) {
+  const cyl = document.getElementById(eye+'-cyl');
+  const ax  = document.getElementById(eye+'-ax');
+  const has = parseFloat(cyl.value) !== 0;
+  ax.disabled = !has;
+  if (!has) ax.selectedIndex = 0;
+}
+
+function goStep(n) {
+  ['s0','s1','s2','s3','s-ok'].forEach(id => document.getElementById(id).style.display = 'none');
+  for (let i=0;i<4;i++) {
+    const el = document.getElementById('step-'+i);
+    if (i<n) el.className='step done';
+    else if (i===n) el.className='step active';
+    else el.className='step';
+  }
+  if (n===1) renderProductTable();
+  if (n===3) fillRecap();
+  if (n<4) document.getElementById('s'+n).style.display = 'block';
+  document.getElementById('topbar-meta').textContent = n<4 ? `Krok ${n+1} ze 4` : '';
+}
+
+function fillRecap() {
+  if (!selectedProd) return;
+  const g = id => document.getElementById(id).value || '—';
+  const isRed = selectedProd.mfr === 'red';
+  document.getElementById('rec-mfr').textContent   = isRed ? 'RED Label' : 'MI.OPTICS';
+  document.getElementById('rec-prod').textContent  = isRed ? (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`) : selectedProd.name;
+  document.getElementById('rec-code').textContent  = isRed ? '—' : selectedProd.code;
+  document.getElementById('rec-idx').textContent   = selectedProd.index;
+  document.getElementById('rec-coat').textContent  = isRed ? (selectedProd.desc || '—') : selectedProd.coat;
+  document.getElementById('rec-pairs').textContent = g('pairs');
+  document.getElementById('rec-note').textContent  = g('note');
+  document.getElementById('rec-rsph').textContent  = g('r-sph');
+  document.getElementById('rec-rcyl').textContent  = g('r-cyl');
+  document.getElementById('rec-rax').textContent   = document.getElementById('r-ax').disabled ? '—' : (g('r-ax')||'—');
+  document.getElementById('rec-rdia').textContent  = g('r-dia') ? `Ø${g('r-dia')} mm` : '—';
+  document.getElementById('rec-rh').textContent    = g('r-h') ? g('r-h')+' mm' : '—';
+  document.getElementById('rec-lsph').textContent  = g('l-sph');
+  document.getElementById('rec-lcyl').textContent  = g('l-cyl');
+  document.getElementById('rec-lax').textContent   = document.getElementById('l-ax').disabled ? '—' : (g('l-ax')||'—');
+  document.getElementById('rec-ldia').textContent  = g('l-dia') ? `Ø${g('l-dia')} mm` : '—';
+  document.getElementById('rec-lh').textContent    = g('l-h') ? g('l-h')+' mm' : '—';
+}
+
+function submitOrder() {
+  document.getElementById('s3').style.display = 'none';
+  document.getElementById('s-ok').style.display = 'block';
+  document.getElementById('topbar-meta').textContent = '';
+  for (let i=0;i<4;i++) document.getElementById('step-'+i).className = 'step done';
+}
+
+function resetOrder() {
+  selectedProd = null;
+  document.getElementById('btn-to-rx').disabled = true;
+  document.getElementById('note').value = '';
+  document.getElementById('r-h').value = '';
+  document.getElementById('l-h').value = '';
+  document.getElementById('r-sph').innerHTML = sphOptions();
+  document.getElementById('l-sph').innerHTML = sphOptions();
+  document.getElementById('r-cyl').innerHTML = cylOptions();
+  document.getElementById('l-cyl').innerHTML = cylOptions();
+  ['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
+  ['r-cyl','l-cyl'].forEach(id => document.getElementById(id).selectedIndex = 0);
+  ['r-ax','l-ax'].forEach(id => { const s = document.getElementById(id); s.selectedIndex=0; s.disabled=true; });
+  document.getElementById('r-dia-warn').style.display = 'none';
+  document.getElementById('l-dia-warn').style.display = 'none';
+  goStep(0);
+}
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.getElementById('nav-'+v).classList.add('active');
+  const t = {new:'Nová objednávka', hist:'Historie objednávek', prof:'Profil'};
+  document.getElementById('topbar-title').textContent = t[v];
+}
+
+function doLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  resetOrder();
+}
+</script>
+</body>
+</html>
