@@ -368,10 +368,11 @@
   <div class="login-box">
     <div class="login-brand">MI.OPTICS <span>· objednávkový systém</span></div>
     <h1>Přihlásit se</h1>
-    <div class="field"><label>E-mail</label><input type="email" id="login-email" value="novak@mi-optics.cz"></div>
-    <div class="field"><label>Heslo</label><input type="password" id="login-pass" value="demo1234"></div>
+    <div class="field"><label>E-mail</label><input type="email" id="login-email" placeholder="vas@email.cz"></div>
+    <div class="field"><label>Heslo</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div id="login-error" style="display:none;color:#ef4444;font-size:13px;margin-top:-8px;margin-bottom:4px;">Nesprávný e-mail nebo heslo.</div>
     <button class="btn-primary" onclick="doLogin()">Přihlásit se</button>
-    <p class="login-note">Demo prostředí — přihlášení je simulované.<br>Účty obchodních zástupců zakládá administrátor.</p>
+    <p class="login-note">Přístup pouze pro obchodní zástupce MI.OPTICS.<br>Účty zakládá administrátor.</p>
   </div>
 </div>
 
@@ -955,7 +956,54 @@ function showView(v) {
   closeMobileNav();
 }
 
-function doLogin() {
+/* ── Auth ─────────────────────────────────────────────────────────────── */
+// Hesla jsou uložena jako SHA-256(heslo + SALT). Nikdy neukládej plain text hesla.
+// Jak přidat/změnit uživatele:
+//   1. Otevři soubor v prohlížeči a stiskni F12 (konzole)
+//   2. Zadej: await generateHash('tvoje_heslo')
+//   3. Zkopíruj výsledek a vlož sem jako hodnotu pro daný email
+const AUTH_SALT = 'miopt_2026_xK9';
+const USERS = {
+  // email (malá písmena): SHA-256(heslo + AUTH_SALT)
+  // Výchozí heslo pro všechny účty: miopt2026  ← změň přes generateHash() v konzoli
+  'novak@mi-optics.cz':   '8696e8fac5a0a1e07a5336e6e779ef2c51fa54e950f44d69a47bb9dd355aa476',
+  // Přidat dalšího zástupce: 'email@mi-optics.cz': 'hash_z_generateHash()',
+};
+
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// Pomocná funkce pro console: await generateHash('tvoje_heslo')
+window.generateHash = async function(pwd) {
+  const h = await sha256hex(pwd + AUTH_SALT);
+  console.log('Hash pro', pwd, ':\n' + h);
+  return h;
+};
+
+async function doLogin() {
+  const email = (document.getElementById('login-email').value || '').trim().toLowerCase();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!email || !pass) {
+    errEl.textContent = 'Vyplňte e-mail a heslo.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!USERS[email]) {
+    errEl.textContent = 'Nesprávný e-mail nebo heslo.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const hash = await sha256hex(pass + AUTH_SALT);
+  if (hash !== USERS[email]) {
+    errEl.textContent = 'Nesprávný e-mail nebo heslo.';
+    errEl.style.display = 'block';
+    return;
+  }
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
 }
