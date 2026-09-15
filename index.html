@@ -160,11 +160,15 @@
   .nav-item:hover { background: var(--sidebar-border); color: var(--sidebar-text-hover); }
   .nav-item.active { background: var(--accent); color: #fff; }
   .nav-item .ico { font-size: 15px; width: 18px; text-align: center; }
-  .sidebar-user { padding: 14px 18px; border-top: 1px solid var(--sidebar-border); }
-  .rep-name { font-size: 13px; font-weight: 600; color: var(--sidebar-user-name); }
-  .rep-email { font-size: 11px; color: var(--sidebar-user-email); margin-top: 1px; }
-  .logout { font-size: 11px; color: var(--danger); cursor: pointer; margin-top: 8px; display: inline-block; }
-  .logout:hover { text-decoration: underline; }
+  .sidebar-user { padding: 14px 14px 16px; border-top: 1px solid var(--sidebar-border); }
+  .user-card { display: flex; align-items: center; gap: 10px; background: var(--sidebar-border); border-radius: 10px; padding: 10px 11px; margin-bottom: 10px; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex: none; letter-spacing: .3px; }
+  .user-info { min-width: 0; }
+  .rep-name { font-size: 14px; font-weight: 700; color: var(--sidebar-user-name); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rep-email { font-size: 11.5px; color: var(--sidebar-user-email); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .logout-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.1); color: var(--danger); font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s, border-color .15s, transform .1s; }
+  .logout-btn:hover { background: rgba(239,68,68,.2); border-color: rgba(239,68,68,.6); }
+  .logout-btn:active { transform: scale(.97); }
 
   /* Theme toggle */
   .theme-toggle { width: 30px; height: 30px; flex: none; border-radius: 8px; border: 1px solid var(--sidebar-border); background: transparent; color: var(--sidebar-text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background .15s, color .15s, transform .2s; }
@@ -201,7 +205,6 @@
   .mfr-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 14px; cursor: pointer; text-align: center; transition: border-color .15s, background .15s, transform .15s, box-shadow .15s; background: var(--subtle-bg); }
   .mfr-card:hover:not(.disabled) { border-color: var(--accent); background: var(--card); transform: translateY(-2px); box-shadow: var(--shadow); }
   .mfr-card.selected { border-color: var(--accent); background: var(--active-bg); }
-  .mfr-card.selected.red-brand { border-color: var(--red-accent); background: var(--active-red-bg); }
   .mfr-card.disabled { opacity: .4; cursor: not-allowed; }
   .mfr-card.disabled:hover { transform: none; box-shadow: none; }
   .mfr-name { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
@@ -285,8 +288,22 @@
   .htable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .htable td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
   .htable tbody tr:last-child td { border: none; }
-  .htable tbody tr { transition: background .12s; }
+  .htable tbody tr { transition: background .12s; cursor: pointer; }
   .htable tbody tr:hover { background: var(--hover-bg); }
+
+  /* Order detail modal */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-backdrop.show { display: flex; animation: fade-up .15s ease; }
+  .modal { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); width: 640px; max-width: 100%; max-height: 86vh; overflow-y: auto; animation: pop-in .25s cubic-bezier(.2,.8,.2,1); transition: background .25s ease; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: background .12s, color .12s; }
+  .modal-close:hover { background: var(--hover-bg); color: var(--text); }
+  .modal-body { padding: 20px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 560px) {
+    .modal-grid { grid-template-columns: 1fr; gap: 16px; }
+  }
   .sbadge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
   .s-wait { background: var(--badge-yellow-bg); color: var(--badge-yellow-text); }
   .s-ship { background: var(--badge-blue-bg); color: var(--badge-blue-text); }
@@ -379,9 +396,14 @@
         <div class="nav-item" id="nav-prof" onclick="showView('prof')"><span class="ico">👤</span>Profil</div>
       </nav>
       <div class="sidebar-user">
-        <div class="rep-name">Pavel Nováček</div>
-        <div class="rep-email">novak@mi-optics.cz</div>
-        <span class="logout" onclick="doLogout()">← Odhlásit se</span>
+        <div class="user-card">
+          <div class="user-avatar">PN</div>
+          <div class="user-info">
+            <div class="rep-name">Pavel Nováček</div>
+            <div class="rep-email">novak@mi-optics.cz</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">← Odhlásit se</button>
       </div>
     </aside>
 
@@ -415,7 +437,7 @@
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
                 <div class="mfr-card red-brand" id="mfr-red" onclick="selMfr(this,'red')">
-                  <div class="mfr-name" style="color:var(--red-accent)">RED Label</div>
+                  <div class="mfr-name">RED Label</div>
                   <div class="mfr-desc">Zakázkové čočky — Ø průměr se řídí Sph/Cyl dle rozsahové tabulky</div>
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
@@ -518,11 +540,6 @@
                     <tr><td>Průměr</td><td id="rec-rdia">—</td><td id="rec-ldia">—</td></tr>
                     <tr><td>Výška</td><td id="rec-rh">—</td><td id="rec-lh">—</td></tr>
                   </table>
-                  <div class="recap-box">
-                    <div class="recap-box-title">Obchodní zástupce</div>
-                    <div class="recap-box-name">Pavel Nováček</div>
-                    <div class="recap-box-email">novak@mi-optics.cz</div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -547,26 +564,59 @@
 
         <!-- HISTORY -->
         <div class="view" id="view-hist">
+          <div class="card">
+            <div class="card-title">Přehled objednávek</div>
+            <div class="table-scroll">
+            <table class="htable">
+              <thead><tr><th>Č.</th><th>Datum</th><th>Produkt</th><th>Kód</th><th>Stav</th></tr></thead>
+              <tbody id="hist-tbody"></tbody>
+            </table>
+            </div>
+          </div>
           <div class="stats">
             <div class="stat c-blue"><div class="stat-n">31</div><div class="stat-l">Objednávek celkem</div></div>
             <div class="stat c-green"><div class="stat-n">27</div><div class="stat-l">Doručeno</div></div>
             <div class="stat c-orange"><div class="stat-n">3</div><div class="stat-l">Odesláno</div></div>
             <div class="stat c-purple"><div class="stat-n">1</div><div class="stat-l">Čeká</div></div>
           </div>
-          <div class="card">
-            <div class="card-title">Přehled objednávek</div>
-            <div class="table-scroll">
-            <table class="htable">
-              <thead><tr><th>Č.</th><th>Datum</th><th>Zákazník</th><th>Produkt</th><th>Kód</th><th>Stav</th></tr></thead>
-              <tbody>
-                <tr><td>#3124</td><td>13. 9. 2026</td><td>Optika Svoboda, Praha 6</td><td>Plast 1,61 Super AR</td><td class="code">305.014</td><td><span class="sbadge s-wait">Čeká</span></td></tr>
-                <tr><td>#3123</td><td>11. 9. 2026</td><td>Oční optika Dvořák, Plzeň</td><td>Plast 1,56 Digital Lotus Max</td><td class="code">310.083</td><td><span class="sbadge s-ship">Odesláno</span></td></tr>
-                <tr><td>#3122</td><td>10. 9. 2026</td><td>Optika Horní, Domažlice</td><td>Plast 1,5 Super AR</td><td class="code">305.011</td><td><span class="sbadge s-ship">Odesláno</span></td></tr>
-                <tr><td>#3121</td><td>08. 9. 2026</td><td>Optika Marek, Tachov</td><td>Plast Photoactive 1,56 Super AR</td><td class="code">305.023</td><td><span class="sbadge s-done">Doručeno</span></td></tr>
-                <tr><td>#3120</td><td>05. 9. 2026</td><td>Oční centrum Procházka, Klatovy</td><td>Plast 1,61 AS Super AR</td><td class="code">305.015</td><td><span class="sbadge s-done">Doručeno</span></td></tr>
-                <tr><td>#3119</td><td>03. 9. 2026</td><td>Oční optika Dvořák, Plzeň</td><td>Plast 1,50 Lotus Max</td><td class="code">309.071</td><td><span class="sbadge s-done">Doručeno</span></td></tr>
-              </tbody>
-            </table>
+        </div>
+
+        <!-- ORDER DETAIL MODAL -->
+        <div class="modal-backdrop" id="order-modal-backdrop" onclick="closeOrderModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <div class="modal-title" id="om-title">Objednávka</div>
+              <button class="modal-close" onclick="closeOrderModal()" aria-label="Zavřít">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="modal-grid">
+                <table class="rtable">
+                  <tr class="sub-hdr"><td colspan="2">Objednávka</td></tr>
+                  <tr><td>Číslo</td><td id="om-id">—</td></tr>
+                  <tr><td>Datum</td><td id="om-date">—</td></tr>
+                  <tr><td>Zákazník</td><td id="om-customer">—</td></tr>
+                  <tr><td>Stav</td><td id="om-status">—</td></tr>
+                </table>
+                <table class="rtable">
+                  <tr class="sub-hdr"><td colspan="2">Čočka</td></tr>
+                  <tr><td>Výrobce</td><td id="om-mfr">MI.OPTICS</td></tr>
+                  <tr><td>Produkt</td><td id="om-product">—</td></tr>
+                  <tr><td>Kód</td><td id="om-code">—</td></tr>
+                  <tr><td>Index</td><td id="om-index">—</td></tr>
+                  <tr><td>Úprava</td><td id="om-coat">—</td></tr>
+                  <tr><td>Počet párů</td><td id="om-pairs">—</td></tr>
+                  <tr><td>Poznámka</td><td id="om-note">—</td></tr>
+                </table>
+              </div>
+              <div class="rx-divider"></div>
+              <table class="rtable">
+                <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
+                <tr><td>Sph</td><td id="om-rsph">—</td><td id="om-lsph">—</td></tr>
+                <tr><td>Cyl</td><td id="om-rcyl">—</td><td id="om-lcyl">—</td></tr>
+                <tr><td>Osa</td><td id="om-rax">—</td><td id="om-lax">—</td></tr>
+                <tr><td>Průměr</td><td id="om-rdia">—</td><td id="om-ldia">—</td></tr>
+                <tr><td>Výška</td><td id="om-rh">—</td><td id="om-lh">—</td></tr>
+              </table>
             </div>
           </div>
         </div>
@@ -574,14 +624,10 @@
         <!-- PROFILE -->
         <div class="view" id="view-prof">
           <div class="card" style="max-width:440px">
-            <div class="card-title">Profil obchodního zástupce</div>
             <table class="rtable">
               <tr><td>Jméno</td><td>Pavel Nováček</td></tr>
               <tr><td>E-mail</td><td>novak@mi-optics.cz</td></tr>
               <tr><td>Telefon</td><td>+420 379 433 912</td></tr>
-              <tr><td>Region</td><td>Plzeňský kraj, Jihočeský kraj</td></tr>
-              <tr><td>Zákazníků</td><td>5</td></tr>
-              <tr><td>Objednávek (2026)</td><td>31</td></tr>
             </table>
           </div>
         </div>
@@ -593,12 +639,12 @@
 
 <script>
 const MI_PRODUCTS = [
-  { name: 'Plast 1,5 HC',                    code: '305.010', index: '1,5',              coat: 'Tvrdení (HC)',                                 dias: ['60','65','70'] },
-  { name: 'Plast 1,5 Super AR',              code: '305.011', index: '1,5',              coat: 'Tvrdení + Super AR',                           dias: ['60','65','70'] },
-  { name: 'Plast 1,56 Super AR',             code: '305.013', index: '1,56',             coat: 'Tvrdení + Super AR',                           dias: ['65','70'] },
+  { name: 'Plast 1,5 HC',                    code: '305.010', index: '1,5',              coat: 'Tvrzení (HC)',                                 dias: ['60','65','70'] },
+  { name: 'Plast 1,5 Super AR',              code: '305.011', index: '1,5',              coat: 'Tvrzení + Super AR',                           dias: ['60','65','70'] },
+  { name: 'Plast 1,56 Super AR',             code: '305.013', index: '1,56',             coat: 'Tvrzení + Super AR',                           dias: ['65','70'] },
   { name: 'Plast Photoactive 1,56 Super AR', code: '305.023', index: '1,56',             coat: 'Fototropní (hnědá/šedá 9–70 %) + Super AR',    dias: ['65','70'] },
-  { name: 'Plast 1,61 Super AR',             code: '305.014', index: '1,61',             coat: 'Tvrdení + Super AR',                           dias: ['65','73'] },
-  { name: 'Plast 1,61 AS Super AR',          code: '305.015', index: '1,61 (asférická)', coat: 'Tvrdení + Super AR',                           dias: ['65','73'] },
+  { name: 'Plast 1,61 Super AR',             code: '305.014', index: '1,61',             coat: 'Tvrzení + Super AR',                           dias: ['65','73'] },
+  { name: 'Plast 1,61 AS Super AR',          code: '305.015', index: '1,61 (asférická)', coat: 'Tvrzení + Super AR',                           dias: ['65','73'] },
   { name: 'Plast 1,56 Digital Lotus Max',    code: '310.083', index: '1,56',             coat: 'BLC technologie + Lotus Max',                  dias: ['65','70'] },
   { name: 'Plast 1,50 Lotus Max',            code: '309.071', index: '1,5',              coat: 'Lotus Max',                                    dias: ['65','70'] },
   { name: 'Plast 1,61 Lotus Max',            code: '309.074', index: '1,61',             coat: 'Lotus Max',                                    dias: ['65','70','75'] },
@@ -937,6 +983,68 @@ if (window.matchMedia) {
   const onSchemeChange = () => { try { if (!localStorage.getItem('miopt-theme')) updateThemeIcon(); } catch (e) { updateThemeIcon(); } };
   if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
 }
+
+/* ── Historie objednávek ── */
+const STATUS_LABEL = { wait: 'Čeká', ship: 'Odesláno', done: 'Doručeno' };
+const ORDERS = [
+  { id:'#3124', date:'13. 9. 2026', customer:'Optika Svoboda, Praha 6', product:'Plast 1,61 Super AR', code:'305.014', index:'1,61', coat:'Tvrzení + Super AR', status:'wait', pairs:1, note:'',
+    r:{sph:'-2.25', cyl:'-0.75', ax:'90', dia:'65', h:'18'}, l:{sph:'-2.00', cyl:'-0.50', ax:'85', dia:'65', h:'18'} },
+  { id:'#3123', date:'11. 9. 2026', customer:'Oční optika Dvořák, Plzeň', product:'Plast 1,56 Digital Lotus Max', code:'310.083', index:'1,56', coat:'BLC technologie + Lotus Max', status:'ship', pairs:1, note:'',
+    r:{sph:'+1.50', cyl:'0.00', ax:'', dia:'70', h:'19'}, l:{sph:'+1.75', cyl:'-0.25', ax:'170', dia:'70', h:'19'} },
+  { id:'#3122', date:'10. 9. 2026', customer:'Optika Horní, Domažlice', product:'Plast 1,5 Super AR', code:'305.011', index:'1,5', coat:'Tvrzení + Super AR', status:'ship', pairs:1, note:'Spěchá, prosím expres.',
+    r:{sph:'-0.75', cyl:'0.00', ax:'', dia:'60', h:'17'}, l:{sph:'-1.00', cyl:'0.00', ax:'', dia:'60', h:'17'} },
+  { id:'#3121', date:'08. 9. 2026', customer:'Optika Marek, Tachov', product:'Plast Photoactive 1,56 Super AR', code:'305.023', index:'1,56', coat:'Fototropní (hnědá/šedá 9–70 %) + Super AR', status:'done', pairs:2, note:'',
+    r:{sph:'-3.50', cyl:'-1.25', ax:'15', dia:'65', h:'18'}, l:{sph:'-3.25', cyl:'-1.00', ax:'175', dia:'65', h:'18'} },
+  { id:'#3120', date:'05. 9. 2026', customer:'Oční centrum Procházka, Klatovy', product:'Plast 1,61 AS Super AR', code:'305.015', index:'1,61 (asférická)', coat:'Tvrzení + Super AR', status:'done', pairs:1, note:'',
+    r:{sph:'-5.75', cyl:'-0.50', ax:'60', dia:'65', h:'19'}, l:{sph:'-6.00', cyl:'-0.75', ax:'120', dia:'65', h:'19'} },
+  { id:'#3119', date:'03. 9. 2026', customer:'Oční optika Dvořák, Plzeň', product:'Plast 1,50 Lotus Max', code:'309.071', index:'1,5', coat:'Lotus Max', status:'done', pairs:1, note:'',
+    r:{sph:'+0.50', cyl:'-0.25', ax:'10', dia:'65', h:'18'}, l:{sph:'+0.75', cyl:'0.00', ax:'', dia:'65', h:'18'} },
+];
+
+function renderHistoryTable() {
+  const tbody = document.getElementById('hist-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = ORDERS.map((o, i) => `
+    <tr onclick="openOrderModal(${i})">
+      <td>${o.id}</td><td>${o.date}</td><td>${o.product}</td><td class="code">${o.code}</td>
+      <td><span class="sbadge s-${o.status}">${STATUS_LABEL[o.status]}</span></td>
+    </tr>
+  `).join('');
+}
+renderHistoryTable();
+
+function openOrderModal(i) {
+  const o = ORDERS[i];
+  if (!o) return;
+  document.getElementById('om-title').textContent = 'Objednávka ' + o.id;
+  document.getElementById('om-id').textContent = o.id;
+  document.getElementById('om-date').textContent = o.date;
+  document.getElementById('om-customer').textContent = o.customer;
+  document.getElementById('om-status').innerHTML = `<span class="sbadge s-${o.status}">${STATUS_LABEL[o.status]}</span>`;
+  document.getElementById('om-product').textContent = o.product;
+  document.getElementById('om-code').textContent = o.code;
+  document.getElementById('om-index').textContent = o.index;
+  document.getElementById('om-coat').textContent = o.coat;
+  document.getElementById('om-pairs').textContent = o.pairs + (o.pairs === 1 ? ' pár' : o.pairs < 5 ? ' páry' : ' párů');
+  document.getElementById('om-note').textContent = o.note || '—';
+  document.getElementById('om-rsph').textContent = o.r.sph;
+  document.getElementById('om-rcyl').textContent = o.r.cyl;
+  document.getElementById('om-rax').textContent = o.r.ax ? o.r.ax + '°' : '—';
+  document.getElementById('om-rdia').textContent = `Ø${o.r.dia} mm`;
+  document.getElementById('om-rh').textContent = `${o.r.h} mm`;
+  document.getElementById('om-lsph').textContent = o.l.sph;
+  document.getElementById('om-lcyl').textContent = o.l.cyl;
+  document.getElementById('om-lax').textContent = o.l.ax ? o.l.ax + '°' : '—';
+  document.getElementById('om-ldia').textContent = `Ø${o.l.dia} mm`;
+  document.getElementById('om-lh').textContent = `${o.l.h} mm`;
+  document.getElementById('order-modal-backdrop').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeOrderModal() {
+  document.getElementById('order-modal-backdrop').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOrderModal(); });
 
 /* ── Mobile nav drawer ── */
 function openMobileNav() {
