@@ -7,10 +7,8 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%232563eb%22/%3E%0A%3Ccircle%20cx%3D%2221%22%20cy%3D%2234%22%20r%3D%2211%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224.5%22/%3E%0A%3Ccircle%20cx%3D%2243%22%20cy%3D%2234%22%20r%3D%2211%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224.5%22/%3E%0A%3Cpath%20d%3D%22M30%2032%20h4%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224.5%22%20stroke-linecap%3D%22round%22/%3E%0A%3Cpath%20d%3D%22M8%2032%20q2%20-5%206%20-2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%3Cpath%20d%3D%22M56%2032%20q-2%20-5%20-6%20-2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%3C/svg%3E%0A">
 <script>
 (function(){
-  try {
-    var t = localStorage.getItem('miopt-theme');
-    if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
-  } catch (e) {}
+  /* Motiv se vždy řídí systémem. Případná dříve uložená ruční volba se zahodí, aby appka natvrdo neuvízla ve světlém/tmavém režimu. */
+  try { localStorage.removeItem('miopt-theme'); } catch (e) {}
 })();
 </script>
 <style>
@@ -181,6 +179,9 @@
   .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 52px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; transition: background .25s ease, border-color .25s ease; }
   .topbar-title { font-size: 15px; font-weight: 700; flex: 1; }
   .topbar-meta { font-size: 12px; color: var(--muted); }
+  .cart-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--active-bg); border: 1px solid var(--active-border); padding: 5px 11px; border-radius: 20px; cursor: pointer; transition: background .12s, transform .1s; }
+  .cart-badge:hover { background: var(--accent); color: #fff; }
+  .cart-badge:active { transform: scale(.95); }
   .content { padding: 28px; }
 
   /* Views */
@@ -193,12 +194,16 @@
 
   /* Steps */
   .steps { display: flex; gap: 0; margin-bottom: 22px; }
-  .step { flex: 1; padding: 11px 8px; text-align: center; font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-right: none; transition: background .2s ease, color .2s ease, border-color .2s ease; }
+  .step { flex: 1; padding: 11px 8px; text-align: center; font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-right: none; transition: background .2s ease, color .2s ease, border-color .2s ease; cursor: pointer; user-select: none; }
   .step:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; }
   .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
   .step .sn { font-size: 16px; font-weight: 800; display: block; margin-bottom: 1px; }
   .step.done { background: var(--active-bg); color: var(--accent); border-color: var(--active-border); }
-  .step.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .step.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; cursor: default; }
+  .step.done:hover { background: var(--hover-bg); }
+  .step:not(.active):not(.done):hover { background: var(--hover-bg); color: var(--text); }
+  .step.locked { cursor: not-allowed; }
+  .step.locked:hover { background: var(--card); color: var(--muted); }
 
   /* Manufacturer grid */
   .mfr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -214,7 +219,7 @@
   .b-soon { background: var(--badge-yellow-bg); color: var(--badge-yellow-text); }
 
   /* Product table */
-  .ptable { width: 100%; border-collapse: collapse; }
+  .ptable { width: 100%; min-width: 760px; border-collapse: collapse; }
   .ptable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .ptable td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   .ptable tbody tr:last-child td { border-bottom: none; }
@@ -231,6 +236,7 @@
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Rx */
+  .rx-product-name { font-size: 14px; font-weight: 700; color: var(--accent); margin: -8px 0 18px; }
   .rx-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
   .eye-title { font-size: 13px; font-weight: 700; margin-bottom: 13px; display: flex; align-items: center; gap: 7px; }
   .eye-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #fff; }
@@ -252,11 +258,23 @@
 
   /* Recap */
   .rtable { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .rtable td { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .rtable td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
   .rtable tr:last-child td { border: none; }
-  .rtable td:first-child { color: var(--muted); width: 42%; }
-  .rtable td:last-child { font-weight: 600; }
+  .rtable td:first-child { color: var(--muted); width: 42%; padding-left: 14px; }
+  .rtable td:last-child { font-weight: 600; padding-right: 14px; }
   .rtable .sub-hdr td { padding-top: 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border: none; }
+
+  /* Cart */
+  .cart-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px; background: var(--subtle-bg); transition: background .25s ease, border-color .25s ease; animation: fade-up .25s ease; }
+  .cart-item:last-child { margin-bottom: 0; }
+  .cart-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .cart-item-title { font-size: 14px; font-weight: 700; }
+  .cart-item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cart-item-remove { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+  .cart-item-remove:hover { background: rgba(239,68,68,.12); color: var(--danger); border-color: rgba(239,68,68,.4); }
+  .cart-item .rtable { background: var(--card); border-radius: 8px; overflow: hidden; }
+  .cart-item-foot { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .cart-empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
   .recap-box { margin-top: 14px; padding: 12px; background: var(--hover-bg); border-radius: var(--radius); border: 1px solid var(--border); transition: background .25s ease, border-color .25s ease; }
   .recap-box-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
   .recap-box-name { font-weight: 600; font-size: 13px; }
@@ -264,6 +282,7 @@
 
   /* Action bar */
   .abar { display: flex; align-items: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .abar-sticky { position: sticky; bottom: 0; background: var(--bg); padding: 14px 0 6px; margin-top: 18px; border-top: 1px solid var(--border); z-index: 20; transition: background .25s ease, border-color .25s ease; }
   .btn-sec { padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text); transition: background .12s, transform .1s; }
   .btn-sec:hover { background: var(--muted-bg); }
   .btn-sec:active { transform: scale(.98); }
@@ -284,7 +303,7 @@
   .c-green .stat-n { color: var(--success); }
   .c-orange .stat-n { color: var(--stat-orange); }
   .c-purple .stat-n { color: var(--stat-purple); }
-  .htable { width: 100%; border-collapse: collapse; }
+  .htable { width: 100%; min-width: 480px; border-collapse: collapse; }
   .htable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .htable td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
   .htable tbody tr:last-child td { border: none; }
@@ -301,6 +320,18 @@
   .modal-close:hover { background: var(--hover-bg); color: var(--text); }
   .modal-body { padding: 20px; }
   .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .addcart-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); opacity: 0; visibility: hidden; transition: opacity .4s ease, visibility 0s linear .4s; }
+  .addcart-overlay.show { opacity: 1; visibility: visible; transition: opacity .4s ease, visibility 0s linear 0s; }
+  .addcart-slider { position: fixed; top: 0; right: 0; height: 100%; width: 440px; max-width: 92vw; background: var(--card); box-shadow: var(--shadow); transform: translateX(100%); transition: transform .4s cubic-bezier(.19,.79,.24,1), background .25s ease; display: flex; flex-direction: column; overflow: hidden; }
+  .addcart-overlay.show .addcart-slider { transform: translateX(0); }
+  .addcart-slider-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .addcart-slider-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .addcart-check { color: var(--success); font-size: 20px; }
+  .addcart-slider-body { padding: 24px; flex: 1; overflow-y: auto; min-height: 0; }
+  .addcart-count { margin-bottom: 16px; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .4px; }
+  .addcart-actions { padding: 20px 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+  .addcart-actions .btn-sec, .addcart-actions .btn-go { width: 100%; margin-left: 0; text-align: center; }
+  @media (max-width: 480px) { .addcart-slider { width: 100vw; max-width: 100vw; } }
   @media (max-width: 560px) {
     .modal-grid { grid-template-columns: 1fr; gap: 16px; }
   }
@@ -368,11 +399,10 @@
   <div class="login-box">
     <div class="login-brand">MI.OPTICS <span>· objednávkový systém</span></div>
     <h1>Přihlásit se</h1>
-    <div class="field"><label>E-mail</label><input type="email" id="login-email" placeholder="vas@email.cz"></div>
-    <div class="field"><label>Heslo</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div id="login-error" style="display:none;color:#ef4444;font-size:13px;margin-top:-8px;margin-bottom:4px;">Nesprávný e-mail nebo heslo.</div>
+    <div class="field"><label>E-mail</label><input type="email" id="login-email" value="novak@mi-optics.cz"></div>
+    <div class="field"><label>Heslo</label><input type="password" id="login-pass" value="demo1234"></div>
     <button class="btn-primary" onclick="doLogin()">Přihlásit se</button>
-    <p class="login-note">Přístup pouze pro obchodní zástupce MI.OPTICS.<br>Účty zakládá administrátor.</p>
+    <p class="login-note">Demo prostředí — přihlášení je simulované.<br>Účty obchodních zástupců zakládá administrátor.</p>
   </div>
 </div>
 
@@ -412,6 +442,7 @@
       <div class="topbar">
         <button class="menu-toggle" onclick="openMobileNav()" title="Menu" aria-label="Otevřít menu">☰</button>
         <div class="topbar-title" id="topbar-title">Nová objednávka</div>
+        <div class="cart-badge" id="cart-badge" onclick="goToCart()" style="display:none">🛒 <span id="cart-count">0</span></div>
         <div class="topbar-meta" id="topbar-meta"></div>
       </div>
 
@@ -421,10 +452,10 @@
         <div class="view active" id="view-new">
 
           <div class="steps">
-            <div class="step active" id="step-0"><span class="sn">1</span>Výrobce</div>
-            <div class="step" id="step-1"><span class="sn">2</span>Čočka</div>
-            <div class="step" id="step-2"><span class="sn">3</span>Parametry Rx</div>
-            <div class="step" id="step-3"><span class="sn">4</span>Rekapitulace</div>
+            <div class="step active" id="step-0" onclick="goToStep(0)"><span class="sn">1</span>Výrobce</div>
+            <div class="step" id="step-1" onclick="goToStep(1)"><span class="sn">2</span>Čočka</div>
+            <div class="step locked" id="step-2" onclick="goToStep(2)"><span class="sn">3</span>Parametry Rx</div>
+            <div class="step" id="step-3" onclick="goToStep(3)"><span class="sn">4</span>Rekapitulace</div>
           </div>
 
           <!-- S0 -->
@@ -473,6 +504,7 @@
           <div id="s2" style="display:none">
             <div class="card">
               <div class="card-title">Parametry Rx</div>
+              <div class="rx-product-name" id="rx-product-name"></div>
               <div class="rx-wrap">
                 <div>
                   <div class="eye-title"><div class="eye-dot eye-r">P</div>Pravé oko</div>
@@ -481,9 +513,8 @@
                     <div class="rx-field"><label>Cyl</label><select id="r-cyl" onchange="onRxChange('r')"></select></div>
                     <div class="rx-field"><label>Osa °</label><select id="r-ax" disabled></select></div>
                   </div>
-                  <div class="rx-row rx-2">
+                  <div class="rx-row" style="max-width:220px">
                     <div class="rx-field"><label>Průměr (mm)</label><select id="r-dia"></select></div>
-                    <div class="rx-field"><label>Výška (mm)</label><input type="number" id="r-h" placeholder="18" min="10" max="35"></div>
                   </div>
                   <div class="rx-warn" id="r-dia-warn" style="display:none"></div>
                 </div>
@@ -494,9 +525,8 @@
                     <div class="rx-field"><label>Cyl</label><select id="l-cyl" onchange="onRxChange('l')"></select></div>
                     <div class="rx-field"><label>Osa °</label><select id="l-ax" disabled></select></div>
                   </div>
-                  <div class="rx-row rx-2">
+                  <div class="rx-row" style="max-width:220px">
                     <div class="rx-field"><label>Průměr (mm)</label><select id="l-dia"></select></div>
-                    <div class="rx-field"><label>Výška (mm)</label><input type="number" id="l-h" placeholder="18" min="10" max="35"></div>
                   </div>
                   <div class="rx-warn" id="l-dia-warn" style="display:none"></div>
                 </div>
@@ -511,42 +541,19 @@
             </div>
             <div class="abar">
               <button class="btn-sec" onclick="goStep(1)">← Zpět</button>
-              <button class="btn-go" id="btn-to-recap" onclick="goStep(3)">Rekapitulace →</button>
+              <button class="btn-go" id="btn-add-cart" onclick="addToCartAndConfirm()">+ Přidat do košíku</button>
             </div>
           </div>
 
           <!-- S3 -->
           <div id="s3" style="display:none">
             <div class="card">
-              <div class="card-title">Rekapitulace objednávky</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
-                <div>
-                  <table class="rtable">
-                    <tr class="sub-hdr"><td colspan="2">Čočka</td></tr>
-                    <tr><td>Výrobce</td><td id="rec-mfr">—</td></tr>
-                    <tr><td>Produkt</td><td id="rec-prod">—</td></tr>
-                    <tr><td>Kód</td><td id="rec-code">—</td></tr>
-                    <tr><td>Index</td><td id="rec-idx">—</td></tr>
-                    <tr><td>Úprava</td><td id="rec-coat">—</td></tr>
-                    <tr><td>Počet párů</td><td id="rec-pairs">—</td></tr>
-                    <tr><td>Poznámka</td><td id="rec-note">—</td></tr>
-                  </table>
-                </div>
-                <div>
-                  <table class="rtable">
-                    <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
-                    <tr><td>Sph</td><td id="rec-rsph">—</td><td id="rec-lsph">—</td></tr>
-                    <tr><td>Cyl</td><td id="rec-rcyl">—</td><td id="rec-lcyl">—</td></tr>
-                    <tr><td>Osa</td><td id="rec-rax">—</td><td id="rec-lax">—</td></tr>
-                    <tr><td>Průměr</td><td id="rec-rdia">—</td><td id="rec-ldia">—</td></tr>
-                    <tr><td>Výška</td><td id="rec-rh">—</td><td id="rec-lh">—</td></tr>
-                  </table>
-                </div>
-              </div>
+              <div class="card-title">Rekapitulace objednávky — košík</div>
+              <div id="cart-list"></div>
             </div>
-            <div class="abar">
-              <button class="btn-sec" onclick="goStep(2)">← Zpět</button>
-              <button class="btn-go btn-send" onclick="submitOrder()">✓ Odeslat objednávku</button>
+            <div class="abar abar-sticky">
+              <button class="btn-sec" onclick="goStep(0)">+ Přidat další čočky</button>
+              <button class="btn-go btn-send" id="btn-submit-order" onclick="submitOrder()">✓ Odeslat objednávku</button>
             </div>
           </div>
 
@@ -616,8 +623,25 @@
                 <tr><td>Cyl</td><td id="om-rcyl">—</td><td id="om-lcyl">—</td></tr>
                 <tr><td>Osa</td><td id="om-rax">—</td><td id="om-lax">—</td></tr>
                 <tr><td>Průměr</td><td id="om-rdia">—</td><td id="om-ldia">—</td></tr>
-                <tr><td>Výška</td><td id="om-rh">—</td><td id="om-lh">—</td></tr>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD TO CART CONFIRM SLIDER (full-height, docked right) -->
+        <div class="addcart-overlay" id="addcart-modal-backdrop" onclick="closeAddCartModal(event)">
+          <div class="addcart-slider" onclick="event.stopPropagation()">
+            <div class="addcart-slider-head">
+              <div class="addcart-slider-title"><span class="addcart-check">✓</span> Čočky přidány do košíku</div>
+              <button class="modal-close" onclick="closeAddCartModal()" aria-label="Zavřít">✕</button>
+            </div>
+            <div class="addcart-slider-body">
+              <div class="addcart-count" id="addcart-count"></div>
+              <div id="addcart-list"></div>
+            </div>
+            <div class="addcart-actions">
+              <button class="btn-sec" onclick="continueSelecting()">← Pokračovat ve výběru</button>
+              <button class="btn-go" onclick="goToCartFromModal()">Přejít do košíku →</button>
             </div>
           </div>
         </div>
@@ -656,7 +680,7 @@ const MI_PRODUCTS = [
 ];
 
 /* ── RED LABEL: data digitalizovaná 1:1 z rozsahy_RED.pdf (24 produktů, Sph×Cyl → Ø) ── */
-const RED_PRODUCTS = [{"id":0,"family":"Org","index":"1,5","desc":"","title":"Red Org 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0},{"id":1,"family":"Org","index":"1,5","desc":"Hard","title":"Red Org 1,5 Hard","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":2,"family":"Org","index":"1,5","desc":"SHC","title":"Red Org 1,5 SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0},{"id":3,"family":"Org","index":"1,5","desc":"Mini SHC","title":"Red Org 1,5 Mini SHC","sphMin":-0.75,"sphMax":7.25,"cylMax":3.0},{"id":4,"family":"Org","index":"1,5","desc":"Maxi Kids","title":"Red Org 1,5 Maxi Kids","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":5,"family":"Org","index":"1,6","desc":"SHC","title":"Red Org 1,6 SHC","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0},{"id":6,"family":"Org","index":"1,6","desc":"AS SHC","title":"Red Org 1,6 AS SHC","sphMin":-11.75,"sphMax":5.25,"cylMax":3.0},{"id":7,"family":"Org","index":"1,67","desc":"SHC","title":"Red Org 1,67 SHC","sphMin":-8.75,"sphMax":5.25,"cylMax":3.0},{"id":8,"family":"Org","index":"1,67","desc":"AS SHC","title":"Red Org 1,67 AS SHC","sphMin":-12.75,"sphMax":5.25,"cylMax":4.0},{"id":9,"family":"Org","index":"1,5","desc":"UltimaS","title":"Red Org 1,5 UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":10,"family":"Org","index":"1,6","desc":"UltimaS","title":"Red Org 1,6 UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0},{"id":11,"family":"Org","index":"1,67","desc":"AS UltimaS","title":"Red Org 1,67 AS UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0},{"id":12,"family":"Org","index":"1,74","desc":"AS UltimaS","title":"Red Org 1,74 AS UltimaS","sphMin":-14.75,"sphMax":-3.75,"cylMax":4.0},{"id":13,"family":"Org","index":"1,5","desc":"BLC UltimaS","title":"Red Org 1,5 BLC UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":14,"family":"Org","index":"1,6","desc":"BLC UltimaS","title":"Red Org 1,6 BLC UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0},{"id":15,"family":"Org","index":"1,67","desc":"AS BLC UltimaS","title":"Red Org 1,67 AS BLC UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0},{"id":16,"family":"Org","index":"1,5","desc":"SHC Transitions","title":"Red Org 1,5 SHC Transitions","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0},{"id":17,"family":"Org","index":"1,5","desc":"SHC Transitions XTRActive","title":"Red Org 1,5 SHC Transitions XTRActive","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0},{"id":18,"family":"Org","index":"1,6","desc":"UltimaS Transitions","title":"Red Org 1,6 UltimaS Transitions","sphMin":-6.75,"sphMax":3.25,"cylMax":2.0},{"id":19,"family":"Tri","index":"1,53","desc":"SHC","title":"Red 1,53 Tri SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":20,"family":"Min","index":"1,5","desc":"","title":"Red Min 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":21,"family":"Min","index":"1,5","desc":"Photo SAR","title":"Red Min 1,5 Photo SAR","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0},{"id":22,"family":"Min","index":"1,5","desc":"SAR","title":"Red Min 1,5 SAR","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0},{"id":23,"family":"Min","index":"1,6","desc":"SAR","title":"Red Min 1,6 SAR","sphMin":-4.75,"sphMax":5.25,"cylMax":2.0}];
+const RED_PRODUCTS = [{"id":0,"family":"Org","index":"1,5","desc":"","title":"Red Org 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0,"code":"093.819"},{"id":1,"family":"Org","index":"1,5","desc":"Hard","title":"Red Org 1,5 Hard","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.818"},{"id":2,"family":"Org","index":"1,5","desc":"SHC","title":"Red Org 1,5 SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0,"code":"003.051"},{"id":3,"family":"Org","index":"1,5","desc":"Mini SHC","title":"Red Org 1,5 Mini SHC","sphMin":-0.75,"sphMax":7.25,"cylMax":3.0,"code":"003.052"},{"id":4,"family":"Org","index":"1,5","desc":"Maxi Kids","title":"Red Org 1,5 Maxi Kids","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.826"},{"id":5,"family":"Org","index":"1,6","desc":"SHC","title":"Red Org 1,6 SHC","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0,"code":"093.806"},{"id":6,"family":"Org","index":"1,6","desc":"AS SHC","title":"Red Org 1,6 AS SHC","sphMin":-11.75,"sphMax":5.25,"cylMax":3.0,"code":"093.804"},{"id":7,"family":"Org","index":"1,67","desc":"SHC","title":"Red Org 1,67 SHC","sphMin":-8.75,"sphMax":5.25,"cylMax":3.0,"code":"093.803"},{"id":8,"family":"Org","index":"1,67","desc":"AS SHC","title":"Red Org 1,67 AS SHC","sphMin":-12.75,"sphMax":5.25,"cylMax":4.0,"code":"093.802"},{"id":9,"family":"Org","index":"1,5","desc":"UltimaS","title":"Red Org 1,5 UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.811"},{"id":10,"family":"Org","index":"1,6","desc":"UltimaS","title":"Red Org 1,6 UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0,"code":"093.805"},{"id":11,"family":"Org","index":"1,67","desc":"AS UltimaS","title":"Red Org 1,67 AS UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0,"code":"093.801"},{"id":12,"family":"Org","index":"1,74","desc":"AS UltimaS","title":"Red Org 1,74 AS UltimaS","sphMin":-14.75,"sphMax":-3.75,"cylMax":4.0,"code":"093.800"},{"id":13,"family":"Org","index":"1,5","desc":"BLC UltimaS","title":"Red Org 1,5 BLC UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"090.710"},{"id":14,"family":"Org","index":"1,6","desc":"BLC UltimaS","title":"Red Org 1,6 BLC UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0,"code":"093.833"},{"id":15,"family":"Org","index":"1,67","desc":"AS BLC UltimaS","title":"Red Org 1,67 AS BLC UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0,"code":"093.834"},{"id":16,"family":"Org","index":"1,5","desc":"SHC Transitions","title":"Red Org 1,5 SHC Transitions","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0,"code":"098.165/098.166"},{"id":17,"family":"Org","index":"1,5","desc":"SHC Transitions XTRActive","title":"Red Org 1,5 SHC Transitions XTRActive","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0,"code":"093.817"},{"id":18,"family":"Org","index":"1,6","desc":"UltimaS Transitions","title":"Red Org 1,6 UltimaS Transitions","sphMin":-6.75,"sphMax":3.25,"cylMax":2.0,"code":"098.169/098.170"},{"id":19,"family":"Tri","index":"1,53","desc":"SHC","title":"Red 1,53 Tri SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.820"},{"id":20,"family":"Min","index":"1,5","desc":"","title":"Red Min 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.825"},{"id":21,"family":"Min","index":"1,5","desc":"Photo SAR","title":"Red Min 1,5 Photo SAR","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0,"code":"093.824"},{"id":22,"family":"Min","index":"1,5","desc":"SAR","title":"Red Min 1,5 SAR","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.823"},{"id":23,"family":"Min","index":"1,6","desc":"SAR","title":"Red Min 1,6 SAR","sphMin":-4.75,"sphMax":5.25,"cylMax":2.0,"code":"093.822"}];
 const RED_GRID = {"0":{"dias":[["65"],["65","70"],["70"]],"grid":[[0.0,[[5.25,3.25,0],[3.0,-0.5,1],[-0.75,-6.75,2]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.5,[[4.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.75,[[4.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.0,[[4.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.25,[[4.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.5,[[3.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.75,[[3.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[2.0,[[3.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[2.25,[[3.0,1.25,0],[1.0,-0.75,1]]],[2.5,[[2.75,1.0,0],[0.75,-0.75,1]]],[2.75,[[2.5,0.75,0],[0.5,-0.75,1]]],[3.0,[[2.25,0.5,0],[0.25,-0.75,1]]]]},"1":{"dias":[["55","60","65"],["55","60","65","70"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-6.75,2]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.5,[[4.75,3.0,0],[2.75,-0.75,1],[-1.0,-6.75,2]]],[0.75,[[4.5,2.75,0],[2.5,-0.75,1],[-1.0,-6.75,2]]],[1.0,[[4.25,2.5,0],[2.25,-0.75,1],[-1.0,-6.75,2]]],[1.25,[[4.0,2.25,0],[2.0,-0.75,1],[-1.0,-6.75,2]]],[1.5,[[3.75,2.0,0],[1.75,-0.75,1],[-1.0,-6.75,2]]],[1.75,[[3.5,1.75,0],[1.5,-0.75,1],[-1.0,-6.75,2]]],[2.0,[[3.25,1.5,0],[1.25,-0.75,1],[-1.0,-6.75,2]]]]},"2":{"dias":[["65","70"],["65","70","75"],["70","75"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-5.75,2],[-6.0,-6.75,3]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[0.5,[[4.75,3.0,0],[2.75,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[0.75,[[4.5,2.75,0],[2.5,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.0,[[4.25,2.5,0],[2.25,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.25,[[4.0,2.25,0],[2.0,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.5,[[3.75,2.0,0],[1.75,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[1.75,[[3.5,1.75,0],[1.5,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[2.0,[[3.25,1.5,0],[1.25,-0.75,1],[-1.0,-5.75,2],[-6.0,-6.75,3]]],[2.25,[[3.25,-0.75,0],[-1.0,-6.75,3]]],[2.5,[[3.25,-0.75,0],[-1.0,-6.75,3]]],[2.75,[[3.25,-0.75,0],[-1.0,-6.75,3]]],[3.0,[[3.25,-0.75,0],[-1.0,-6.75,3]]]]},"3":{"dias":[["50","55","60"],["55","60"]],"grid":[[0.0,[[7.25,-0.75,0]]],[0.25,[[7.0,-0.75,0]]],[0.5,[[6.75,-0.75,0]]],[0.75,[[6.5,-0.75,0]]],[1.0,[[6.25,-0.75,0]]],[1.25,[[6.0,-0.75,0]]],[1.5,[[5.75,-0.75,0]]],[1.75,[[5.5,-0.75,0]]],[2.0,[[5.25,-0.75,0]]],[2.25,[[5.0,-0.75,1]]],[2.5,[[4.75,-0.75,1]]],[2.75,[[4.5,-0.75,1]]],[3.0,[[4.25,-0.75,1]]]]},"4":{"dias":[["50","55","60","65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-6.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-6.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-6.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-6.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-6.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-6.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-6.75,1]]]]},"5":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-9.75,2],[-10.25,-10.25,2],[-10.75,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-9.0,2]]],[0.5,[[4.75,-1.0,0],[-1.25,-7.25,1],[-7.5,-9.25,2]]],[0.75,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-9.5,2]]],[1.0,[[4.25,-1.5,0],[-1.75,-7.75,1],[-8.0,-9.75,2]]],[1.25,[[4.0,-1.75,0],[-2.0,-8.0,1],[-8.25,-10.0,2]]],[1.5,[[3.75,-2.0,0],[-2.25,-8.25,1],[-8.5,-10.25,2]]],[1.75,[[3.5,-2.25,0],[-2.5,-8.5,1],[-8.75,-10.5,2]]],[2.0,[[3.25,-2.5,0],[-2.75,-8.75,1],[-9.0,-10.75,2]]]]},"6":{"dias":[["60","65"],["75"],["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-10.75,3]]],[0.25,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-11.0,3]]],[0.5,[[4.75,-0.75,0],[-1.0,-1.0,2],[-1.25,-7.25,1],[-7.5,-11.25,3]]],[0.75,[[4.5,-0.75,0],[-1.0,-1.25,2],[-1.5,-7.5,1],[-7.75,-11.5,3]]],[1.0,[[4.25,-0.75,0],[-1.0,-1.5,2],[-1.75,-7.75,1],[-8.0,-11.75,3]]],[1.25,[[4.0,-0.75,0],[-1.0,-1.75,2],[-2.0,-8.0,1],[-8.25,-10.0,3]]],[1.5,[[3.75,-0.75,0],[-1.0,-2.0,2],[-2.25,-8.25,1],[-8.5,-10.25,3]]],[1.75,[[3.5,-0.75,0],[-1.0,-2.25,2],[-2.5,-8.5,1],[-8.75,-10.5,3]]],[2.0,[[3.25,-0.75,0],[-1.0,-2.5,2],[-2.75,-8.75,1],[-9.0,-10.75,3]]],[2.25,[[-3.0,-9.0,1],[-9.25,-11.0,3]]],[2.5,[[-3.25,-9.25,1],[-9.5,-11.25,3]]],[2.75,[[-3.5,-9.5,1],[-9.75,-11.5,3]]],[3.0,[[-3.75,-9.75,1],[-10.0,-11.75,3]]]]},"7":{"dias":[["65"],["70"],["75"]],"grid":[[0.0,[[5.25,1.5,0],[1.25,-0.5,1],[-0.75,-7.75,2],[-8.0,-8.75,1]]],[0.25,[[5.0,1.25,0],[1.0,-0.75,1],[-1.0,-7.75,2],[-8.0,-8.75,1]]],[0.5,[[4.75,1.0,0],[0.75,-1.0,1],[-1.25,-8.0,2],[-8.25,-8.75,1]]],[0.75,[[4.5,0.75,0],[0.5,-1.25,1],[-1.5,-8.0,2],[-8.25,-8.75,1]]],[1.0,[[4.25,0.5,0],[0.25,-1.5,1],[-1.75,-8.25,2],[-8.5,-8.75,1]]],[1.25,[[4.0,0.25,0],[0.0,-1.75,1],[-2.0,-8.25,2],[-8.5,-8.75,1]]],[1.5,[[3.75,0.0,0],[-0.25,-2.0,1],[-2.25,-8.5,2],[-8.75,-8.75,1]]],[1.75,[[3.5,-0.25,0],[-0.5,-2.25,1],[-2.5,-8.5,2],[-8.75,-8.75,1]]],[2.0,[[3.25,-0.5,0],[-0.75,-2.5,1],[-2.75,-8.75,2]]],[2.25,[[3.0,-0.75,0],[-1.0,-2.75,1],[-3.0,-8.75,2]]],[2.5,[[2.75,-1.0,0],[-1.25,-3.0,1],[-3.25,-8.75,2]]],[2.75,[[2.5,-1.25,0],[-1.5,-3.25,1],[-3.5,-8.75,2]]],[3.0,[[2.25,-1.5,0],[-1.75,-3.5,1],[-3.75,-8.75,2]]]]},"8":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.75,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[0.5,[[4.75,-0.75,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[0.75,[[4.5,-0.75,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.0,[[4.25,-0.75,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[1.25,[[4.0,-0.75,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[1.5,[[3.75,-0.75,0],[-4.25,-8.25,1],[-8.5,-12.25,2]]],[1.75,[[3.5,-0.75,0],[-4.5,-8.5,1],[-8.75,-12.5,2]]],[2.0,[[3.25,-0.75,0],[-4.75,-8.75,1],[-9.0,-12.75,2]]],[2.25,[[-5.0,-9.0,1],[-9.25,-11.0,2]]],[2.5,[[-5.25,-9.25,1],[-9.5,-11.25,2]]],[2.75,[[-5.5,-9.5,1],[-9.75,-11.5,2]]],[3.0,[[-5.75,-9.75,1],[-10.0,-11.75,2]]],[3.25,[[-6.0,-10.0,1],[-10.25,-12.0,2]]],[3.5,[[-6.25,-10.25,1],[-10.5,-12.25,2]]],[3.75,[[-6.5,-10.5,1],[-10.75,-12.5,2]]],[4.0,[[-6.75,-10.75,1],[-11.0,-12.75,2]]]]},"9":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-1.0,0],[-1.25,-6.75,1]]],[0.75,[[4.5,-1.25,0],[-1.5,-6.75,1]]],[1.0,[[4.25,-1.5,0],[-1.75,-6.75,1]]],[1.25,[[4.0,-1.75,0],[-2.0,-6.75,1]]],[1.5,[[3.75,-2.0,0],[-2.25,-6.75,1]]],[1.75,[[3.5,-2.25,0],[-2.5,-6.75,1]]],[2.0,[[3.25,-2.5,0],[-2.75,-6.75,1]]]]},"10":{"dias":[["60","65"],["60","65","70"],["75"],["65"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-6.75,2],[-7.0,-9.75,4],[-10.25,-10.25,4],[-10.75,-10.75,4]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-7.0,2],[-7.25,-9.0,4]]],[0.5,[[4.75,3.0,0],[2.75,-0.75,1],[-1.0,-1.0,3],[-1.25,-7.25,2],[-7.5,-9.25,4]]],[0.75,[[4.5,2.75,0],[2.5,-0.75,1],[-1.0,-1.25,3],[-1.5,-7.5,2],[-7.75,-9.5,4]]],[1.0,[[4.25,2.5,0],[2.25,-0.75,1],[-1.0,-1.5,3],[-1.75,-7.75,2],[-8.0,-9.75,4]]],[1.25,[[4.0,2.25,0],[2.0,-0.75,1],[-1.0,-1.75,3],[-2.0,-8.0,2],[-8.25,-10.0,4]]],[1.5,[[3.75,2.0,0],[1.75,-0.75,1],[-1.0,-2.0,3],[-2.25,-8.25,2],[-8.5,-10.25,4]]],[1.75,[[3.5,1.75,0],[1.5,-0.75,1],[-1.0,-2.25,3],[-2.5,-8.5,2],[-8.75,-10.5,4]]],[2.0,[[3.25,1.5,0],[1.25,-0.75,1],[-1.0,-2.5,3],[-2.75,-8.75,2],[-9.0,-10.75,4]]]]},"11":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[0.5,[[4.75,-0.75,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[0.75,[[4.5,-0.75,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.0,[[4.25,-0.75,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[1.25,[[4.0,-0.75,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[1.5,[[3.75,-0.75,0],[-4.25,-8.25,1],[-8.5,-12.25,2]]],[1.75,[[3.5,-0.75,0],[-4.5,-8.5,1],[-8.75,-12.5,2]]],[2.0,[[3.25,-0.75,0],[-4.75,-8.75,1],[-9.0,-12.75,2]]]]},"12":{"dias":[["75"],["70"]],"grid":[[0.0,[[-3.75,-6.75,0],[-7.0,-10.75,1],[-11.25,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1],[-14.25,-14.25,1],[-14.75,-14.75,1]]],[0.25,[[-4.0,-7.0,0],[-7.25,-11.0,1],[-11.5,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1]]],[0.5,[[-4.25,-7.25,0],[-7.5,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1]]],[0.75,[[-4.5,-7.5,0],[-7.75,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1]]],[1.0,[[-4.75,-7.75,0],[-8.0,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1]]],[1.25,[[-5.0,-8.0,0],[-8.25,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1],[-14.0,-14.0,1]]],[1.5,[[-5.25,-8.25,0],[-8.5,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1],[-14.25,-14.25,1]]],[1.75,[[-5.5,-8.5,0],[-8.75,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1],[-14.0,-14.0,1],[-14.5,-14.5,1]]],[2.0,[[-5.75,-8.75,0],[-9.0,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1],[-14.25,-14.25,1],[-14.75,-14.75,1]]],[2.25,[[-6.0,-9.0,0],[-9.25,-11.0,1]]],[2.5,[[-6.25,-9.25,0],[-9.5,-11.25,1]]],[2.75,[[-6.5,-9.5,0],[-9.75,-11.5,1]]],[3.0,[[-6.75,-9.75,0],[-10.0,-11.75,1]]],[3.25,[[-7.0,-10.0,0],[-10.25,-12.0,1]]],[3.5,[[-7.25,-10.25,0],[-10.5,-12.25,1]]],[3.75,[[-7.5,-10.5,0],[-10.75,-12.5,1]]],[4.0,[[-7.75,-10.75,0],[-11.0,-12.75,1]]]]},"13":{"dias":[["65","70"],["70"]],"grid":[[0.0,[[5.25,-0.75,0],[-1.0,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-6.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-6.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-6.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-6.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-6.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-6.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-6.75,1]]]]},"14":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-9.75,2],[-10.25,-10.25,2],[-10.75,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-9.0,2]]],[0.5,[[4.75,-1.0,0],[-1.25,-7.25,1],[-7.5,-9.25,2]]],[0.75,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-9.5,2]]],[1.0,[[4.25,-1.5,0],[-1.75,-7.75,1],[-8.0,-9.75,2]]],[1.25,[[4.0,-1.75,0],[-2.0,-8.0,1],[-8.25,-10.0,2]]],[1.5,[[3.75,-2.0,0],[-2.25,-8.25,1],[-8.5,-10.25,2]]],[1.75,[[3.5,-2.25,0],[-2.5,-8.5,1],[-8.75,-10.5,2]]],[2.0,[[3.25,-2.5,0],[-2.75,-8.75,1],[-9.0,-10.75,2]]]]},"15":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[0.25,[[5.0,-0.75,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[0.5,[[4.75,-0.75,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[0.75,[[4.5,-0.75,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.0,[[4.25,-0.75,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[1.25,[[4.0,-0.75,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[1.5,[[3.75,-0.75,0],[-4.25,-8.25,1],[-8.5,-12.25,2]]],[1.75,[[3.5,-0.75,0],[-4.5,-8.5,1],[-8.75,-12.5,2]]],[2.0,[[3.25,-0.75,0],[-4.75,-8.75,1],[-9.0,-12.75,2]]]]},"16":{"dias":[["65"],["70"]],"grid":[[0.0,[[3.25,-0.5,0],[-0.75,-4.75,1]]],[0.25,[[3.0,-0.5,0],[-0.75,-4.75,1]]],[0.5,[[2.75,-0.5,0],[-0.75,-4.75,1]]],[0.75,[[2.5,-0.5,0],[-0.75,-4.75,1]]],[1.0,[[2.25,-0.5,0],[-0.75,-4.75,1]]],[1.25,[[2.0,-0.5,0],[-0.75,-4.75,1]]],[1.5,[[1.75,-0.5,0],[-0.75,-4.75,1]]],[1.75,[[1.5,-0.5,0],[-0.75,-4.75,1]]],[2.0,[[1.25,-0.5,0],[-0.75,-4.75,1]]]]},"17":{"dias":[["65"],["70"]],"grid":[[0.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[0.25,[[3.0,-0.75,0],[-1.0,-4.75,1]]],[0.5,[[2.75,-0.75,0],[-1.0,-4.75,1]]],[0.75,[[2.5,-0.75,0],[-1.0,-4.75,1]]],[1.0,[[2.25,-0.75,0],[-1.0,-4.75,1]]],[1.25,[[2.0,-0.75,0],[-1.0,-4.75,1]]],[1.5,[[1.75,-0.75,0],[-1.0,-4.75,1]]],[1.75,[[1.5,-0.75,0],[-1.0,-4.75,1]]],[2.0,[[1.25,-0.75,0],[-1.0,-4.75,1]]]]},"18":{"dias":[["65"],["75"]],"grid":[[0.0,[[3.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[3.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[2.75,-1.0,0],[-1.25,-6.75,1]]],[0.75,[[2.5,-1.25,0],[-1.5,-6.75,1]]],[1.0,[[2.25,-1.5,0],[-1.75,-6.75,1]]],[1.25,[[2.0,-1.75,0],[-2.0,-6.75,1]]],[1.5,[[1.75,-2.0,0],[-2.25,-6.75,1]]],[1.75,[[1.5,-2.25,0],[-2.5,-6.75,1]]],[2.0,[[1.25,-2.5,0],[-2.75,-6.75,1]]]]},"19":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-1.0,0],[-1.25,-6.75,1]]],[0.75,[[4.5,-1.25,0],[-1.5,-6.75,1]]],[1.0,[[4.25,-1.5,0],[-1.75,-6.75,1]]],[1.25,[[4.0,-1.75,0],[-2.0,-6.75,1]]],[1.5,[[3.75,-2.0,0],[-2.25,-6.75,1]]],[1.75,[[3.5,-2.25,0],[-2.5,-6.75,1]]],[2.0,[[3.25,-2.5,0],[-2.75,-6.75,1]]]]},"20":{"dias":[["60","65"],["65","70"],["70"]],"grid":[[0.0,[[5.25,3.5,0],[3.25,-0.5,1],[-0.75,-6.75,2]]],[0.25,[[5.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.5,[[4.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[0.75,[[4.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.0,[[4.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.25,[[4.0,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.5,[[3.75,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[1.75,[[3.5,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]],[2.0,[[3.25,3.25,0],[3.0,-0.75,1],[-1.0,-6.75,2]]]]},"21":{"dias":[["65"],["70"]],"grid":[[0.0,[[3.25,-0.5,0],[-0.75,-4.75,1]]],[0.25,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[0.5,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[0.75,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.25,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.5,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[1.75,[[3.25,-0.75,0],[-1.0,-4.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]]]},"22":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-6.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-6.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-6.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-6.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-6.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-6.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-6.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-6.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-6.75,1]]]]},"23":{"dias":[["65"],["70"]],"grid":[[0.0,[[5.25,-0.5,0],[-0.75,-4.75,1]]],[0.25,[[5.0,-0.75,0],[-1.0,-4.75,1]]],[0.5,[[4.75,-0.75,0],[-1.0,-4.75,1]]],[0.75,[[4.5,-0.75,0],[-1.0,-4.75,1]]],[1.0,[[4.25,-0.75,0],[-1.0,-4.75,1]]],[1.25,[[4.0,-0.75,0],[-1.0,-4.75,1]]],[1.5,[[3.75,-0.75,0],[-1.0,-4.75,1]]],[1.75,[[3.5,-0.75,0],[-1.0,-4.75,1]]],[2.0,[[3.25,-0.75,0],[-1.0,-4.75,1]]]]}};
 
 function sphOptions() {
@@ -724,12 +748,13 @@ function renderProductTable() {
   const tbody = document.getElementById('prod-tbody');
   selectedProd = null;
   document.getElementById('btn-to-rx').disabled = true;
+  updateStepLocks();
   tbody.innerHTML = '';
 
   if (selectedMfr === 'red') {
     thead.innerHTML = `<tr>
       <th style="width:28px"></th>
-      <th>Produkt</th><th>Index</th><th>Provedení</th><th>Rozsah Sph</th><th>Cyl (max)</th>
+      <th>Produkt</th><th>Kód</th><th>Index</th><th>Úprava</th><th>Průměr</th><th>Rozsah Sph</th><th>Cyl (max)</th>
     </tr>`;
     const groups = [['Org','Red Org — organické čočky'], ['Tri','Red Tri — trifokální'], ['Min','Red Min — minerální čočky']];
     groups.forEach(([fam, label]) => {
@@ -737,17 +762,21 @@ function renderProductTable() {
       if (!items.length) return;
       const grpTr = document.createElement('tr');
       grpTr.className = 'grp';
-      grpTr.innerHTML = `<td colspan="6">${label}</td>`;
+      grpTr.innerHTML = `<td colspan="8">${label}</td>`;
       tbody.appendChild(grpTr);
       items.forEach(p => {
         const tr = document.createElement('tr');
         tr.className = 'pr';
         const dispName = p.desc ? `${p.family} ${p.index} ${p.desc}` : `${p.family} ${p.index}`;
+        const g = RED_GRID[p.id];
+        const allDias = g ? Array.from(new Set(g.dias.flat())).sort((a,b) => parseFloat(a) - parseFloat(b)) : [];
         tr.innerHTML = `
           <td><span class="radio"></span></td>
           <td><strong>${dispName}</strong></td>
+          <td class="code">${p.code}</td>
           <td>${p.index}</td>
           <td style="color:var(--muted);font-size:12px">${p.desc || '—'}</td>
+          <td><div class="dia-pills">${allDias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
           <td>${p.sphMax>=0?'+':''}${p.sphMax.toFixed(2)} až ${p.sphMin>=0?'+':''}${p.sphMin.toFixed(2)}</td>
           <td>−${p.cylMax.toFixed(2)}</td>
         `;
@@ -758,7 +787,7 @@ function renderProductTable() {
   } else {
     thead.innerHTML = `<tr>
       <th style="width:28px"></th>
-      <th>Produkt</th><th>Kód</th><th>Index</th><th>Úprava</th><th>Průměry</th>
+      <th>Produkt</th><th>Kód</th><th>Index</th><th>Úprava</th><th>Průměr</th><th>Rozsah Sph</th><th>Cyl (max)</th>
     </tr>`;
     MI_PRODUCTS.forEach(p => {
       const tr = document.createElement('tr');
@@ -770,6 +799,8 @@ function renderProductTable() {
         <td>${p.index}</td>
         <td style="color:var(--muted);font-size:12px">${p.coat}</td>
         <td><div class="dia-pills">${p.dias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
+        <td>+6.00 až −6.00</td>
+        <td>−3.00</td>
       `;
       tr.onclick = () => selectMiProduct(p, tr);
       tbody.appendChild(tr);
@@ -795,7 +826,14 @@ function selectRedProduct(p, tr) {
 
 /* ── Rx step setup — pro RED se rozsahy Sph/Cyl generují dle konkrétního produktu ── */
 function setupRxForProduct() {
+  updateStepLocks();
   ['r-ax','l-ax'].forEach(id => { const s = document.getElementById(id); s.selectedIndex = 0; s.disabled = true; });
+
+  const isRed = selectedProd.mfr === 'red';
+  const label = isRed
+    ? 'RED Label — ' + (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`)
+    : 'MI.OPTICS — ' + selectedProd.name;
+  document.getElementById('rx-product-name').textContent = label;
 
   if (selectedProd.mfr === 'red') {
     const sphHtml = sphOptionsRange(selectedProd.sphMin, selectedProd.sphMax);
@@ -826,8 +864,8 @@ function setupRxForProduct() {
     document.getElementById('l-dia').disabled = false;
     document.getElementById('r-dia-warn').style.display = 'none';
     document.getElementById('l-dia-warn').style.display = 'none';
-    document.getElementById('btn-to-recap').disabled = false;
   }
+  updateRecapButtonState();
 }
 
 /* ── RED Label: vyhledání dostupných Ø pro danou kombinaci Sph/Cyl dle digitalizovaných tabulek ── */
@@ -864,11 +902,14 @@ function updateRedDia(eye) {
 }
 
 function updateRecapButtonState() {
-  const btn = document.getElementById('btn-to-recap');
-  if (!selectedProd || selectedProd.mfr !== 'red') { btn.disabled = false; return; }
-  const rOk = document.getElementById('r-dia').value !== '';
-  const lOk = document.getElementById('l-dia').value !== '';
-  btn.disabled = !(rOk && lOk);
+  const btnCart = document.getElementById('btn-add-cart');
+  let ok = true;
+  if (selectedProd && selectedProd.mfr === 'red') {
+    const rOk = document.getElementById('r-dia').value !== '';
+    const lOk = document.getElementById('l-dia').value !== '';
+    ok = rOk && lOk;
+  }
+  btnCart.disabled = !ok;
 }
 
 function onRxChange(eye) {
@@ -893,32 +934,162 @@ function goStep(n) {
     else el.className='step';
   }
   if (n===1) renderProductTable();
-  if (n===3) fillRecap();
+  if (n===3) renderCart();
   if (n<4) document.getElementById('s'+n).style.display = 'block';
   document.getElementById('topbar-meta').textContent = n<4 ? `Krok ${n+1} ze 4` : '';
+  updateStepLocks();
 }
 
-function fillRecap() {
-  if (!selectedProd) return;
-  const g = id => document.getElementById(id).value || '—';
+/* ── Klikací kroky v hlavičce — umožní přímý přechod na libovolný krok ── */
+function goToStep(n) {
+  if (n === 2 && !selectedProd) return;
+  goStep(n);
+}
+
+function updateStepLocks() {
+  const el = document.getElementById('step-2');
+  if (!el) return;
+  const locked = !selectedProd;
+  el.classList.toggle('locked', locked);
+  el.title = locked ? 'Nejprve vyberte čočku v kroku 2' : '';
+}
+
+/* ── Košík (více čoček v jedné objednávce) ── */
+let CART = [];
+
+function currentSelectionValid() {
+  if (!selectedProd) return false;
+  if (selectedProd.mfr === 'red') {
+    return document.getElementById('r-dia').value !== '' && document.getElementById('l-dia').value !== '';
+  }
+  return true;
+}
+
+function buildCartItem() {
+  const g = id => document.getElementById(id).value || '';
   const isRed = selectedProd.mfr === 'red';
-  document.getElementById('rec-mfr').textContent   = isRed ? 'RED Label' : 'MI.OPTICS';
-  document.getElementById('rec-prod').textContent  = isRed ? (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`) : selectedProd.name;
-  document.getElementById('rec-code').textContent  = isRed ? '—' : selectedProd.code;
-  document.getElementById('rec-idx').textContent   = selectedProd.index;
-  document.getElementById('rec-coat').textContent  = isRed ? (selectedProd.desc || '—') : selectedProd.coat;
-  document.getElementById('rec-pairs').textContent = g('pairs');
-  document.getElementById('rec-note').textContent  = g('note');
-  document.getElementById('rec-rsph').textContent  = g('r-sph');
-  document.getElementById('rec-rcyl').textContent  = g('r-cyl');
-  document.getElementById('rec-rax').textContent   = document.getElementById('r-ax').disabled ? '—' : (g('r-ax')||'—');
-  document.getElementById('rec-rdia').textContent  = g('r-dia') ? `Ø${g('r-dia')} mm` : '—';
-  document.getElementById('rec-rh').textContent    = g('r-h') ? g('r-h')+' mm' : '—';
-  document.getElementById('rec-lsph').textContent  = g('l-sph');
-  document.getElementById('rec-lcyl').textContent  = g('l-cyl');
-  document.getElementById('rec-lax').textContent   = document.getElementById('l-ax').disabled ? '—' : (g('l-ax')||'—');
-  document.getElementById('rec-ldia').textContent  = g('l-dia') ? `Ø${g('l-dia')} mm` : '—';
-  document.getElementById('rec-lh').textContent    = g('l-h') ? g('l-h')+' mm' : '—';
+  return {
+    mfr: selectedProd.mfr,
+    name: isRed ? (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`) : selectedProd.name,
+    code: selectedProd.code,
+    index: selectedProd.index,
+    coat: isRed ? (selectedProd.desc || '—') : selectedProd.coat,
+    pairs: g('pairs') || '1',
+    note: g('note'),
+    r: { sph: g('r-sph'), cyl: g('r-cyl'), ax: document.getElementById('r-ax').disabled ? '' : g('r-ax'), dia: g('r-dia') },
+    l: { sph: g('l-sph'), cyl: g('l-cyl'), ax: document.getElementById('l-ax').disabled ? '' : g('l-ax'), dia: g('l-dia') },
+  };
+}
+
+function addToCart() {
+  if (!currentSelectionValid()) return null;
+  const item = buildCartItem();
+  CART.push(item);
+  updateCartBadge();
+  return item;
+}
+
+function addToCartAndConfirm() {
+  const item = addToCart();
+  if (!item) return;
+  document.getElementById('note').value = '';
+  document.getElementById('pairs').selectedIndex = 0;
+  openAddCartModal();
+}
+
+function openAddCartModal() {
+  document.getElementById('addcart-count').textContent =
+    `V košíku: ${CART.length} ${pairsWord(CART.length)}`;
+  renderAddCartList();
+  document.getElementById('addcart-modal-backdrop').classList.add('show');
+}
+
+function closeAddCartModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('addcart-modal-backdrop').classList.remove('show');
+}
+
+function continueSelecting() {
+  closeAddCartModal();
+  goStep(0);
+}
+
+function goToCartFromModal() {
+  closeAddCartModal();
+  goStep(3);
+}
+
+function pairsWord(n) {
+  if (n === 1) return 'položka';
+  if (n >= 2 && n <= 4) return 'položky';
+  return 'položek';
+}
+
+function pairsLabel(n) {
+  const v = parseInt(n, 10) || 1;
+  return v + (v === 1 ? ' pár' : v < 5 ? ' páry' : ' párů');
+}
+
+function cartItemHtml(item, i) {
+  return `
+    <div class="cart-item">
+      <div class="cart-item-head">
+        <div>
+          <div class="cart-item-title">${item.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${item.name}</div>
+          <div class="cart-item-sub">${item.index}${item.code !== '—' ? ' · ' + item.code : ''} · ${item.coat}</div>
+        </div>
+        <button class="cart-item-remove" onclick="removeCartItem(${i})" title="Odebrat z košíku" aria-label="Odebrat z košíku">✕</button>
+      </div>
+      <table class="rtable">
+        <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
+        <tr><td>Sph</td><td>${item.r.sph || '—'}</td><td>${item.l.sph || '—'}</td></tr>
+        <tr><td>Cyl</td><td>${item.r.cyl || '—'}</td><td>${item.l.cyl || '—'}</td></tr>
+        <tr><td>Osa</td><td>${item.r.ax ? item.r.ax + '°' : '—'}</td><td>${item.l.ax ? item.l.ax + '°' : '—'}</td></tr>
+        <tr><td>Průměr</td><td>${item.r.dia ? 'Ø' + item.r.dia + ' mm' : '—'}</td><td>${item.l.dia ? 'Ø' + item.l.dia + ' mm' : '—'}</td></tr>
+      </table>
+      <div class="cart-item-foot">Počet párů: <strong>${pairsLabel(item.pairs)}</strong>${item.note ? ' · Poznámka: ' + item.note : ''}</div>
+    </div>
+  `;
+}
+
+function renderCartList(containerId, emptyMsg) {
+  const list = document.getElementById(containerId);
+  if (!list) return;
+  if (!CART.length) {
+    list.innerHTML = `<p class="cart-empty">${emptyMsg}</p>`;
+    return;
+  }
+  list.innerHTML = CART.map((item, i) => cartItemHtml(item, i)).join('');
+}
+
+function renderCart() {
+  const submitBtn = document.getElementById('btn-submit-order');
+  if (submitBtn) submitBtn.disabled = !CART.length;
+  renderCartList('cart-list', 'Košík je zatím prázdný — vraťte se o krok zpět a přidejte čočku.');
+}
+
+function renderAddCartList() {
+  renderCartList('addcart-list', 'Košík je zatím prázdný.');
+}
+
+function removeCartItem(i) {
+  CART.splice(i, 1);
+  renderCart();
+  renderAddCartList();
+  updateCartBadge();
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cart-badge');
+  const count = document.getElementById('cart-count');
+  count.textContent = CART.length;
+  badge.style.display = CART.length ? 'flex' : 'none';
+}
+
+function goToCart() {
+  if (!CART.length) return;
+  showView('new');
+  goStep(3);
 }
 
 function submitOrder() {
@@ -926,14 +1097,16 @@ function submitOrder() {
   document.getElementById('s-ok').style.display = 'block';
   document.getElementById('topbar-meta').textContent = '';
   for (let i=0;i<4;i++) document.getElementById('step-'+i).className = 'step done';
+  CART = [];
+  updateCartBadge();
 }
 
 function resetOrder() {
   selectedProd = null;
+  CART = [];
+  updateCartBadge();
   document.getElementById('btn-to-rx').disabled = true;
   document.getElementById('note').value = '';
-  document.getElementById('r-h').value = '';
-  document.getElementById('l-h').value = '';
   document.getElementById('r-sph').innerHTML = sphOptions();
   document.getElementById('l-sph').innerHTML = sphOptions();
   document.getElementById('r-cyl').innerHTML = cylOptions();
@@ -956,56 +1129,10 @@ function showView(v) {
   closeMobileNav();
 }
 
-/* ── Auth ─────────────────────────────────────────────────────────────── */
-// Hesla jsou uložena jako SHA-256(heslo + SALT). Nikdy neukládej plain text hesla.
-// Jak přidat/změnit uživatele:
-//   1. Otevři soubor v prohlížeči a stiskni F12 (konzole)
-//   2. Zadej: await generateHash('tvoje_heslo')
-//   3. Zkopíruj výsledek a vlož sem jako hodnotu pro daný email
-const AUTH_SALT = 'miopt_2026_xK9';
-const USERS = {
-  // email (malá písmena): SHA-256(heslo + AUTH_SALT)
-  // Výchozí heslo pro všechny účty: miopt2026  ← změň přes generateHash() v konzoli
-  'novak@mi-optics.cz':   '8696e8fac5a0a1e07a5336e6e779ef2c51fa54e950f44d69a47bb9dd355aa476',
-  // Přidat dalšího zástupce: 'email@mi-optics.cz': 'hash_z_generateHash()',
-};
-
-async function sha256hex(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-// Pomocná funkce pro console: await generateHash('tvoje_heslo')
-window.generateHash = async function(pwd) {
-  const h = await sha256hex(pwd + AUTH_SALT);
-  console.log('Hash pro', pwd, ':\n' + h);
-  return h;
-};
-
-async function doLogin() {
-  const email = (document.getElementById('login-email').value || '').trim().toLowerCase();
-  const pass  = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  errEl.style.display = 'none';
-
-  if (!email || !pass) {
-    errEl.textContent = 'Vyplňte e-mail a heslo.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (!USERS[email]) {
-    errEl.textContent = 'Nesprávný e-mail nebo heslo.';
-    errEl.style.display = 'block';
-    return;
-  }
-  const hash = await sha256hex(pass + AUTH_SALT);
-  if (hash !== USERS[email]) {
-    errEl.textContent = 'Nesprávný e-mail nebo heslo.';
-    errEl.style.display = 'block';
-    return;
-  }
+function doLogin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  updateStepLocks();
 }
 function doLogout() {
   document.getElementById('app').style.display = 'none';
@@ -1014,6 +1141,13 @@ function doLogout() {
 }
 
 /* ── Dark mode ── */
+/* Motiv se VŽDY řídí systémem — nic se natrvalo neukládá, takže appka po
+   znovunačtení stránky vždy odpovídá aktuálnímu nastavení počítače.
+   Tlačítko slouží jen jako dočasný náhled pro tuto jednu návštěvu
+   (Automaticky → Světlý → Tmavý → zpět na Automaticky), po refreshi se
+   vždy resetuje zpět na Automaticky. */
+let sessionThemeMode = null; // null = automaticky dle systému (výchozí)
+
 function getEffectiveTheme() {
   const stored = document.documentElement.getAttribute('data-theme');
   if (stored) return stored;
@@ -1021,18 +1155,21 @@ function getEffectiveTheme() {
 }
 function updateThemeIcon() {
   const btn = document.getElementById('theme-toggle');
-  if (btn) btn.textContent = getEffectiveTheme() === 'dark' ? '☀️' : '🌙';
+  if (!btn) return;
+  if (sessionThemeMode === 'light') { btn.textContent = '☀️'; btn.title = 'Motiv: světlý (klik = tmavý)'; }
+  else if (sessionThemeMode === 'dark') { btn.textContent = '🌙'; btn.title = 'Motiv: tmavý (klik = automaticky dle systému)'; }
+  else { btn.textContent = '🖥️'; btn.title = 'Motiv: automaticky dle systému (klik = světlý, jen pro tuto návštěvu)'; }
 }
 function toggleTheme() {
-  const next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  try { localStorage.setItem('miopt-theme', next); } catch (e) {}
+  sessionThemeMode = sessionThemeMode === null ? 'light' : sessionThemeMode === 'light' ? 'dark' : null;
+  if (sessionThemeMode === null) document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', sessionThemeMode);
   updateThemeIcon();
 }
 updateThemeIcon();
 if (window.matchMedia) {
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  const onSchemeChange = () => { try { if (!localStorage.getItem('miopt-theme')) updateThemeIcon(); } catch (e) { updateThemeIcon(); } };
+  const onSchemeChange = () => { if (sessionThemeMode === null) updateThemeIcon(); };
   if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
 }
 
@@ -1083,12 +1220,10 @@ function openOrderModal(i) {
   document.getElementById('om-rcyl').textContent = o.r.cyl;
   document.getElementById('om-rax').textContent = o.r.ax ? o.r.ax + '°' : '—';
   document.getElementById('om-rdia').textContent = `Ø${o.r.dia} mm`;
-  document.getElementById('om-rh').textContent = `${o.r.h} mm`;
   document.getElementById('om-lsph').textContent = o.l.sph;
   document.getElementById('om-lcyl').textContent = o.l.cyl;
   document.getElementById('om-lax').textContent = o.l.ax ? o.l.ax + '°' : '—';
   document.getElementById('om-ldia').textContent = `Ø${o.l.dia} mm`;
-  document.getElementById('om-lh').textContent = `${o.l.h} mm`;
   document.getElementById('order-modal-backdrop').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
@@ -1096,7 +1231,7 @@ function closeOrderModal() {
   document.getElementById('order-modal-backdrop').classList.remove('show');
   document.body.style.overflow = '';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOrderModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeOrderModal(); closeAddCartModal(); } });
 
 /* ── Mobile nav drawer ── */
 function openMobileNav() {
