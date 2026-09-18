@@ -236,6 +236,7 @@
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Rx */
+  .rx-edit-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--stat-orange); background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.35); padding: 5px 12px; border-radius: 20px; margin: -8px 0 12px; }
   .rx-product-name { font-size: 14px; font-weight: 700; color: var(--accent); margin: -8px 0 18px; }
   .rx-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
   .eye-title { font-size: 13px; font-weight: 700; margin-bottom: 13px; display: flex; align-items: center; gap: 7px; }
@@ -270,7 +271,9 @@
   .cart-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
   .cart-item-title { font-size: 14px; font-weight: 700; }
   .cart-item-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .cart-item-remove { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+  .cart-item-actions { flex: none; display: flex; gap: 6px; }
+  .cart-item-icon-btn { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+  .cart-item-icon-btn:hover { background: rgba(37,99,235,.1); color: var(--accent); border-color: rgba(37,99,235,.35); }
   .cart-item-remove:hover { background: rgba(239,68,68,.12); color: var(--danger); border-color: rgba(239,68,68,.4); }
   .cart-item .rtable { background: var(--card); border-radius: 8px; overflow: hidden; }
   .cart-item-foot { font-size: 12px; color: var(--muted); margin-top: 10px; }
@@ -504,6 +507,7 @@
           <div id="s2" style="display:none">
             <div class="card">
               <div class="card-title">Parametry Rx</div>
+              <div class="rx-edit-badge" id="rx-edit-badge" style="display:none">✎ Upravujete položku již přidanou v košíku</div>
               <div class="rx-product-name" id="rx-product-name"></div>
               <div class="rx-wrap">
                 <div>
@@ -926,6 +930,7 @@ function updateAxis(eye) {
 }
 
 function goStep(n) {
+  if (n !== 2 && editingCartIndex !== null) cancelCartItemEdit();
   ['s0','s1','s2','s3','s-ok'].forEach(id => document.getElementById(id).style.display = 'none');
   for (let i=0;i<4;i++) {
     const el = document.getElementById('step-'+i);
@@ -978,6 +983,7 @@ function buildCartItem() {
     note: g('note'),
     r: { sph: g('r-sph'), cyl: g('r-cyl'), ax: document.getElementById('r-ax').disabled ? '' : g('r-ax'), dia: g('r-dia') },
     l: { sph: g('l-sph'), cyl: g('l-cyl'), ax: document.getElementById('l-ax').disabled ? '' : g('l-ax'), dia: g('l-dia') },
+    _prod: JSON.parse(JSON.stringify(selectedProd)),
   };
 }
 
@@ -989,7 +995,59 @@ function addToCart() {
   return item;
 }
 
+/* ── Úprava již přidané položky v košíku ── */
+let editingCartIndex = null;
+
+function editCartItem(i) {
+  const item = CART[i];
+  if (!item || !item._prod) return;
+  closeAddCartModal();
+  editingCartIndex = i;
+  selectedMfr = item._prod.mfr;
+  selectedProd = JSON.parse(JSON.stringify(item._prod));
+  setupRxForProduct();
+  goStep(2);
+  restoreRxValues(item);
+  const banner = document.getElementById('rx-edit-badge');
+  if (banner) banner.style.display = 'inline-flex';
+  const btn = document.getElementById('btn-add-cart');
+  if (btn) btn.textContent = '✓ Uložit změny';
+}
+
+function cancelCartItemEdit() {
+  editingCartIndex = null;
+  const banner = document.getElementById('rx-edit-badge');
+  if (banner) banner.style.display = 'none';
+  const btn = document.getElementById('btn-add-cart');
+  if (btn) btn.textContent = '+ Přidat do košíku';
+}
+
+function restoreRxValues(item) {
+  ['r','l'].forEach(eye => {
+    const src = item[eye];
+    document.getElementById(eye+'-sph').value = src.sph;
+    document.getElementById(eye+'-cyl').value = src.cyl;
+    updateAxis(eye);
+    if (selectedProd.mfr === 'red') updateRedDia(eye);
+    const diaSel = document.getElementById(eye+'-dia');
+    if (src.dia && [...diaSel.options].some(o => o.value === src.dia)) diaSel.value = src.dia;
+    if (src.ax) document.getElementById(eye+'-ax').value = src.ax;
+  });
+  document.getElementById('pairs').value = item.pairs || '1';
+  document.getElementById('note').value = item.note || '';
+  updateRecapButtonState();
+}
+
 function addToCartAndConfirm() {
+  if (editingCartIndex !== null) {
+    if (!currentSelectionValid()) return;
+    CART[editingCartIndex] = buildCartItem();
+    updateCartBadge();
+    document.getElementById('note').value = '';
+    document.getElementById('pairs').selectedIndex = 0;
+    goStep(3);
+    return;
+  }
   const item = addToCart();
   if (!item) return;
   document.getElementById('note').value = '';
@@ -1038,7 +1096,10 @@ function cartItemHtml(item, i) {
           <div class="cart-item-title">${item.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${item.name}</div>
           <div class="cart-item-sub">${item.index}${item.code !== '—' ? ' · ' + item.code : ''} · ${item.coat}</div>
         </div>
-        <button class="cart-item-remove" onclick="removeCartItem(${i})" title="Odebrat z košíku" aria-label="Odebrat z košíku">✕</button>
+        <div class="cart-item-actions">
+          <button class="cart-item-icon-btn" onclick="editCartItem(${i})" title="Upravit položku" aria-label="Upravit položku">✎</button>
+          <button class="cart-item-icon-btn cart-item-remove" onclick="removeCartItem(${i})" title="Odebrat z košíku" aria-label="Odebrat z košíku">✕</button>
+        </div>
       </div>
       <table class="rtable">
         <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
