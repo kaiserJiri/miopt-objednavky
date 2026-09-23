@@ -246,7 +246,9 @@
   .rx-row { display: grid; gap: 10px; margin-bottom: 10px; }
   .rx-3 { grid-template-columns: 1fr 1fr 1fr; }
   .rx-2 { grid-template-columns: 1fr 1fr; }
-  .rx-field label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .rx-field label { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .rx-count { display: inline-flex; align-items: center; justify-content: center; min-width: 15px; height: 14px; padding: 0 4px; border-radius: 7px; background: var(--muted-bg); color: var(--muted); font-size: 9px; font-weight: 800; text-transform: none; letter-spacing: 0; }
+  .rx-count:empty { display: none; }
   .rx-field select, .rx-field input {
     width: 100%; padding: 7px 9px; border: 1px solid var(--border);
     border-radius: var(--radius); font-size: 13px; outline: none;
@@ -513,24 +515,24 @@
                 <div>
                   <div class="eye-title"><div class="eye-dot eye-r">P</div>Pravé oko</div>
                   <div class="rx-row rx-3">
-                    <div class="rx-field"><label>Sph</label><select id="r-sph" onchange="onRxChange('r')"></select></div>
-                    <div class="rx-field"><label>Cyl</label><select id="r-cyl" onchange="onRxChange('r')"></select></div>
-                    <div class="rx-field"><label>Osa °</label><select id="r-ax" disabled></select></div>
+                    <div class="rx-field"><label>Sph <span class="rx-count" id="r-sph-cnt"></span></label><select id="r-sph" onchange="onRxChange('r','sph')"></select></div>
+                    <div class="rx-field"><label>Cyl <span class="rx-count" id="r-cyl-cnt"></span></label><select id="r-cyl" onchange="onRxChange('r','cyl')"></select></div>
+                    <div class="rx-field"><label>Osa ° <span class="rx-count" id="r-ax-cnt"></span></label><select id="r-ax" disabled></select></div>
                   </div>
                   <div class="rx-row" style="max-width:220px">
-                    <div class="rx-field"><label>Průměr (mm)</label><select id="r-dia"></select></div>
+                    <div class="rx-field"><label>Průměr (mm) <span class="rx-count" id="r-dia-cnt"></span></label><select id="r-dia"></select></div>
                   </div>
                   <div class="rx-warn" id="r-dia-warn" style="display:none"></div>
                 </div>
                 <div>
                   <div class="eye-title"><div class="eye-dot eye-l">L</div>Levé oko</div>
                   <div class="rx-row rx-3">
-                    <div class="rx-field"><label>Sph</label><select id="l-sph" onchange="onRxChange('l')"></select></div>
-                    <div class="rx-field"><label>Cyl</label><select id="l-cyl" onchange="onRxChange('l')"></select></div>
-                    <div class="rx-field"><label>Osa °</label><select id="l-ax" disabled></select></div>
+                    <div class="rx-field"><label>Sph <span class="rx-count" id="l-sph-cnt"></span></label><select id="l-sph" onchange="onRxChange('l','sph')"></select></div>
+                    <div class="rx-field"><label>Cyl <span class="rx-count" id="l-cyl-cnt"></span></label><select id="l-cyl" onchange="onRxChange('l','cyl')"></select></div>
+                    <div class="rx-field"><label>Osa ° <span class="rx-count" id="l-ax-cnt"></span></label><select id="l-ax" disabled></select></div>
                   </div>
                   <div class="rx-row" style="max-width:220px">
-                    <div class="rx-field"><label>Průměr (mm)</label><select id="l-dia"></select></div>
+                    <div class="rx-field"><label>Průměr (mm) <span class="rx-count" id="l-dia-cnt"></span></label><select id="l-dia"></select></div>
                   </div>
                   <div class="rx-warn" id="l-dia-warn" style="display:none"></div>
                 </div>
@@ -671,17 +673,14 @@
 </div>
 
 <script>
-const MI_PRODUCTS = [
-  { name: 'Plast 1,5 HC',                    code: '305.010', index: '1,5',              coat: 'Tvrzení (HC)',                                 dias: ['60','65','70'] },
-  { name: 'Plast 1,5 Super AR',              code: '305.011', index: '1,5',              coat: 'Tvrzení + Super AR',                           dias: ['60','65','70'] },
-  { name: 'Plast 1,56 Super AR',             code: '305.013', index: '1,56',             coat: 'Tvrzení + Super AR',                           dias: ['65','70'] },
-  { name: 'Plast Photoactive 1,56 Super AR', code: '305.023', index: '1,56',             coat: 'Fototropní (hnědá/šedá 9–70 %) + Super AR',    dias: ['65','70'] },
-  { name: 'Plast 1,61 Super AR',             code: '305.014', index: '1,61',             coat: 'Tvrzení + Super AR',                           dias: ['65','73'] },
-  { name: 'Plast 1,61 AS Super AR',          code: '305.015', index: '1,61 (asférická)', coat: 'Tvrzení + Super AR',                           dias: ['65','73'] },
-  { name: 'Plast 1,56 Digital Lotus Max',    code: '310.083', index: '1,56',             coat: 'BLC technologie + Lotus Max',                  dias: ['65','70'] },
-  { name: 'Plast 1,50 Lotus Max',            code: '309.071', index: '1,5',              coat: 'Lotus Max',                                    dias: ['65','70'] },
-  { name: 'Plast 1,61 Lotus Max',            code: '309.074', index: '1,61',             coat: 'Lotus Max',                                    dias: ['65','70','75'] },
-];
+/* ── MI.OPTICS: data digitalizovaná 1:1 z MIOPTICS_rozsahy.pdf (9 produktů, Sph×Cyl → Ø) ──
+   Stejný princip jako RED_GRID níže: pro každý produkt seznam "dias" (sady průměrů, které
+   graf pro danou buňku nabízí) + "grid" po sloupcích (Cyl), v každém sloupci úseky
+   [sphHigh, sphLow, indexDoDias]. Pozor: u některých produktů (viz cylMax) je v PDF sice
+   vytištěná osa Cyl až do +3, ale reálná data (barevné buňky) končí dřív — cylMax proto
+   odpovídá skutečně obarvené části grafu, ne poslední vytištěné hodnotě na ose. */
+const MI_PRODUCTS = [{"id":0,"name":"Plast 1,5 HC","code":"305.010","index":"1,5","coat":"Tvrzení (HC)","cylMax":2.0,"sphMin":-6.0,"sphMax":6.0},{"id":1,"name":"Plast 1,5 Super AR","code":"305.011","index":"1,5","coat":"Tvrzení + Super AR","cylMax":3.0,"sphMin":-6.0,"sphMax":6.0},{"id":2,"name":"Plast 1,56 Super AR","code":"305.013","index":"1,56","coat":"Tvrzení + Super AR","cylMax":3.0,"sphMin":-6.0,"sphMax":6.0},{"id":3,"name":"Plast Photoactive 1,56 Super AR","code":"305.023","index":"1,56","coat":"Fototropní (hnědá/šedá 9–70 %) + Super AR","cylMax":2.0,"sphMin":-6.0,"sphMax":4.0},{"id":4,"name":"Plast 1,61 Super AR","code":"305.014","index":"1,61","coat":"Tvrzení + Super AR","cylMax":2.0,"sphMin":-6.0,"sphMax":6.0},{"id":5,"name":"Plast 1,61 AS Super AR","code":"305.015","index":"1,61 (asférická)","coat":"Tvrzení + Super AR","cylMax":2.0,"sphMin":-6.0,"sphMax":6.0},{"id":6,"name":"Plast 1,56 Digital Lotus Max","code":"310.083","index":"1,56","coat":"BLC technologie + Lotus Max","cylMax":2.0,"sphMin":-6.0,"sphMax":6.0},{"id":7,"name":"Plast 1,50 Lotus Max","code":"309.071","index":"1,5","coat":"Lotus Max","cylMax":2.0,"sphMin":-6.0,"sphMax":6.0},{"id":8,"name":"Plast 1,61 Lotus Max","code":"309.074","index":"1,61","coat":"Lotus Max","cylMax":2.0,"sphMin":-6.0,"sphMax":6.0}];
+const MI_GRID = {"0":{"dias":[["70"],["65","70"],["65"],["60","65"],["60"]],"grid":[[0.0,[[6.0,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[0.25,[[6.0,6.0,4],[5.75,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[0.5,[[6.0,5.75,4],[5.5,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[0.75,[[6.0,5.5,4],[5.25,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[1.0,[[6.0,5.25,4],[5.0,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[1.25,[[6.0,5.0,4],[4.75,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[1.5,[[6.0,4.75,4],[4.5,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[1.75,[[6.0,4.5,4],[4.25,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]],[2.0,[[6.0,4.25,4],[4.0,2.0,3],[1.75,0.5,2],[0.25,0.25,1],[0.0,-6.0,0]]]]},"1":{"dias":[["70"],["65","70"],["65"],["60","65","70"],["60","65"],["60"]],"grid":[[0.0,[[6.0,4.25,4],[4.0,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[0.25,[[6.0,6.0,5],[5.75,4.0,4],[3.75,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[6.0,5.75,5],[5.5,3.75,4],[3.5,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[0.75,[[6.0,5.5,5],[5.25,3.5,4],[3.25,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[1.0,[[6.0,5.25,5],[5.0,3.25,4],[3.0,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[1.25,[[6.0,5.0,5],[4.75,3.0,4],[2.75,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[1.5,[[6.0,4.75,5],[4.5,2.75,4],[2.5,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[1.75,[[6.0,4.5,5],[4.25,2.5,4],[2.25,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[2.0,[[6.0,4.25,5],[4.0,2.25,4],[2.0,2.0,3],[1.75,0.0,1],[-0.25,-6.0,0]]],[2.25,[[4.0,0.0,4],[-0.25,-4.0,2]]],[2.5,[[4.0,0.0,4],[-0.25,-4.0,2]]],[2.75,[[4.0,0.0,4],[-0.25,-4.0,2]]],[3.0,[[4.0,0.0,4],[-0.25,-4.0,2]]]]},"2":{"dias":[["70"],["65","70"],["65"]],"grid":[[0.0,[[6.0,4.25,2],[4.0,0.0,1],[-0.25,-6.0,0]]],[0.25,[[6.0,4.0,2],[3.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[6.0,3.75,2],[3.5,0.0,1],[-0.25,-6.0,0]]],[0.75,[[6.0,3.5,2],[3.25,0.0,1],[-0.25,-6.0,0]]],[1.0,[[6.0,3.25,2],[3.0,0.0,1],[-0.25,-6.0,0]]],[1.25,[[6.0,3.0,2],[2.75,0.0,1],[-0.25,-6.0,0]]],[1.5,[[6.0,2.75,2],[2.5,0.0,1],[-0.25,-6.0,0]]],[1.75,[[6.0,2.5,2],[2.25,0.0,1],[-0.25,-6.0,0]]],[2.0,[[6.0,2.25,2],[2.0,0.0,1],[-0.25,-6.0,0]]],[2.25,[[3.75,0.0,2],[-2.25,-6.0,0]]],[2.5,[[3.5,0.0,2],[-2.5,-6.0,0]]],[2.75,[[3.25,0.0,2],[-2.75,-6.0,0]]],[3.0,[[3.0,0.0,2],[-3.0,-6.0,0]]]]},"3":{"dias":[["70"],["65"]],"grid":[[0.0,[[4.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[3.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[3.5,-0.25,1],[-0.5,-6.0,0]]],[0.75,[[3.25,-0.5,1],[-0.75,-6.0,0]]],[1.0,[[3.0,-0.75,1],[-1.0,-6.0,0]]],[1.25,[[2.75,-1.0,1],[-1.25,-6.0,0]]],[1.5,[[2.5,-1.25,1],[-1.5,-6.0,0]]],[1.75,[[2.25,-1.5,1],[-1.75,-6.0,0]]],[2.0,[[2.0,-1.75,1],[-2.0,-6.0,0]]]]},"4":{"dias":[["73"],["65"]],"grid":[[0.0,[[6.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[5.5,-0.25,1],[-0.5,-6.0,0]]],[0.75,[[5.25,-0.5,1],[-0.75,-6.0,0]]],[1.0,[[5.0,-0.75,1],[-1.0,-6.0,0]]],[1.25,[[4.75,-1.0,1],[-1.25,-6.0,0]]],[1.5,[[4.5,-1.25,1],[-1.5,-6.0,0]]],[1.75,[[4.25,-1.5,1],[-1.75,-6.0,0]]],[2.0,[[4.0,-1.75,1],[-2.0,-6.0,0]]]]},"5":{"dias":[["73"],["65"]],"grid":[[0.0,[[6.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[5.5,-0.25,1],[-0.5,-6.0,0]]],[0.75,[[5.25,-0.5,1],[-0.75,-6.0,0]]],[1.0,[[5.0,-0.75,1],[-1.0,-6.0,0]]],[1.25,[[4.75,-1.0,1],[-1.25,-6.0,0]]],[1.5,[[4.5,-1.25,1],[-1.5,-6.0,0]]],[1.75,[[4.25,-1.5,1],[-1.75,-6.0,0]]],[2.0,[[4.0,-1.75,1],[-2.0,-6.0,0]]]]},"6":{"dias":[["70"],["65","70"],["65"]],"grid":[[0.0,[[6.0,4.25,2],[4.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,4.0,2],[3.75,0.25,1],[0.0,-6.0,0]]],[0.5,[[5.5,3.75,2],[3.5,0.25,1],[0.0,-6.0,0]]],[0.75,[[5.25,3.5,2],[3.25,0.25,1],[0.0,-6.0,0]]],[1.0,[[5.0,3.25,2],[3.0,0.25,1],[0.0,-6.0,0]]],[1.25,[[4.75,3.0,2],[2.75,0.25,1],[0.0,-6.0,0]]],[1.5,[[4.5,2.75,2],[2.5,0.25,1],[0.0,-6.0,0]]],[1.75,[[4.25,2.5,2],[2.25,0.25,1],[0.0,-6.0,0]]],[2.0,[[4.0,2.25,2],[2.0,0.25,1],[0.0,-6.0,0]]]]},"7":{"dias":[["70"],["65","70"],["65"]],"grid":[[0.0,[[6.0,4.25,2],[4.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,4.0,2],[3.75,0.25,1],[0.0,-6.0,0]]],[0.5,[[5.5,3.75,2],[3.5,0.25,1],[0.0,-6.0,0]]],[0.75,[[5.25,3.5,2],[3.25,0.25,1],[0.0,-6.0,0]]],[1.0,[[5.0,3.25,2],[3.0,0.25,1],[0.0,-6.0,0]]],[1.25,[[4.75,3.0,2],[2.75,0.25,1],[0.0,-6.0,0]]],[1.5,[[4.5,2.75,2],[2.5,0.25,1],[0.0,-6.0,0]]],[1.75,[[4.25,2.5,2],[2.25,0.25,1],[0.0,-6.0,0]]],[2.0,[[4.0,2.25,2],[2.0,0.25,1],[0.0,-6.0,0]]]]},"8":{"dias":[["75"],["65","70"],["65"]],"grid":[[0.0,[[6.0,4.25,2],[4.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,4.0,2],[3.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[5.5,3.75,2],[3.5,-0.25,1],[-0.5,-6.0,0]]],[0.75,[[5.25,3.5,2],[3.25,-0.5,1],[-0.75,-6.0,0]]],[1.0,[[5.0,3.25,2],[3.0,-0.75,1],[-1.0,-6.0,0]]],[1.25,[[4.75,3.0,2],[2.75,-1.0,1],[-1.25,-6.0,0]]],[1.5,[[4.5,2.75,2],[2.5,-1.25,1],[-1.5,-6.0,0]]],[1.75,[[4.25,2.5,2],[2.25,-1.5,1],[-1.75,-6.0,0]]],[2.0,[[4.0,2.25,2],[2.0,-1.75,1],[-2.0,-6.0,0]]]]}};
 
 /* ── RED LABEL: data digitalizovaná 1:1 z rozsahy_RED.pdf (24 produktů, Sph×Cyl → Ø) ── */
 const RED_PRODUCTS = [{"id":0,"family":"Org","index":"1,5","desc":"","title":"Red Org 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0,"code":"093.819"},{"id":1,"family":"Org","index":"1,5","desc":"Hard","title":"Red Org 1,5 Hard","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.818"},{"id":2,"family":"Org","index":"1,5","desc":"SHC","title":"Red Org 1,5 SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":3.0,"code":"003.051"},{"id":3,"family":"Org","index":"1,5","desc":"Mini SHC","title":"Red Org 1,5 Mini SHC","sphMin":-0.75,"sphMax":7.25,"cylMax":3.0,"code":"003.052"},{"id":4,"family":"Org","index":"1,5","desc":"Maxi Kids","title":"Red Org 1,5 Maxi Kids","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.826"},{"id":5,"family":"Org","index":"1,6","desc":"SHC","title":"Red Org 1,6 SHC","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0,"code":"093.806"},{"id":6,"family":"Org","index":"1,6","desc":"AS SHC","title":"Red Org 1,6 AS SHC","sphMin":-11.75,"sphMax":5.25,"cylMax":3.0,"code":"093.804"},{"id":7,"family":"Org","index":"1,67","desc":"SHC","title":"Red Org 1,67 SHC","sphMin":-8.75,"sphMax":5.25,"cylMax":3.0,"code":"093.803"},{"id":8,"family":"Org","index":"1,67","desc":"AS SHC","title":"Red Org 1,67 AS SHC","sphMin":-12.75,"sphMax":5.25,"cylMax":4.0,"code":"093.802"},{"id":9,"family":"Org","index":"1,5","desc":"UltimaS","title":"Red Org 1,5 UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.811"},{"id":10,"family":"Org","index":"1,6","desc":"UltimaS","title":"Red Org 1,6 UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0,"code":"093.805"},{"id":11,"family":"Org","index":"1,67","desc":"AS UltimaS","title":"Red Org 1,67 AS UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0,"code":"093.801"},{"id":12,"family":"Org","index":"1,74","desc":"AS UltimaS","title":"Red Org 1,74 AS UltimaS","sphMin":-14.75,"sphMax":-3.75,"cylMax":4.0,"code":"093.800"},{"id":13,"family":"Org","index":"1,5","desc":"BLC UltimaS","title":"Red Org 1,5 BLC UltimaS","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"090.710"},{"id":14,"family":"Org","index":"1,6","desc":"BLC UltimaS","title":"Red Org 1,6 BLC UltimaS","sphMin":-10.75,"sphMax":5.25,"cylMax":2.0,"code":"093.833"},{"id":15,"family":"Org","index":"1,67","desc":"AS BLC UltimaS","title":"Red Org 1,67 AS BLC UltimaS","sphMin":-12.75,"sphMax":5.25,"cylMax":2.0,"code":"093.834"},{"id":16,"family":"Org","index":"1,5","desc":"SHC Transitions","title":"Red Org 1,5 SHC Transitions","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0,"code":"098.165/098.166"},{"id":17,"family":"Org","index":"1,5","desc":"SHC Transitions XTRActive","title":"Red Org 1,5 SHC Transitions XTRActive","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0,"code":"093.817"},{"id":18,"family":"Org","index":"1,6","desc":"UltimaS Transitions","title":"Red Org 1,6 UltimaS Transitions","sphMin":-6.75,"sphMax":3.25,"cylMax":2.0,"code":"098.169/098.170"},{"id":19,"family":"Tri","index":"1,53","desc":"SHC","title":"Red 1,53 Tri SHC","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.820"},{"id":20,"family":"Min","index":"1,5","desc":"","title":"Red Min 1,5","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.825"},{"id":21,"family":"Min","index":"1,5","desc":"Photo SAR","title":"Red Min 1,5 Photo SAR","sphMin":-4.75,"sphMax":3.25,"cylMax":2.0,"code":"093.824"},{"id":22,"family":"Min","index":"1,5","desc":"SAR","title":"Red Min 1,5 SAR","sphMin":-6.75,"sphMax":5.25,"cylMax":2.0,"code":"093.823"},{"id":23,"family":"Min","index":"1,6","desc":"SAR","title":"Red Min 1,6 SAR","sphMin":-4.75,"sphMax":5.25,"cylMax":2.0,"code":"093.822"}];
@@ -720,13 +719,99 @@ function sphOptionsRange(min, max) {
   return o.join('');
 }
 function cylOptionsRange(maxMag) {
+  /* Katalogové rozsahové grafy (MI.OPTICS i RED Label) mají osu Cyl vytištěnou
+     v plusové notaci (0, +0,5, +1, ...) — dropdown proto nabízí stejné znaménko,
+     ať se hodnoty na první pohled shodují s tabulkou. Na dohledání Ø v gridu to
+     nemá vliv, lookupGridDia pracuje s Math.abs(cyl). */
   const o = ['<option value="0">0.00</option>'];
   const hi = Math.round(maxMag*4);
   for (let v = 1; v <= hi; v++) {
-    const s = (-v/4).toFixed(2);
-    o.push(`<option value="${s}">${s}</option>`);
+    const s = (v/4).toFixed(2);
+    o.push(`<option value="${s}">+${s}</option>`);
   }
   return o.join('');
+}
+
+/* ── Vzájemné omezování nabídky Sph/Cyl podle rozsahové tabulky vybrané čočky.
+   Cíl: nedávat na výběr kombinaci, která v katalogu neexistuje (dřív šlo vybrat
+   cokoliv a nedostupnost se ukázala až u pole Průměr hláškou "nedostupné").
+   Když uživatel změní Sph, přefiltruje se nabídka Cyl jen na hodnoty, které pro
+   tenhle Sph mají v gridu záznam (a naopak). ── */
+function sphValueList() {
+  const isRed = selectedProd.mfr === 'red';
+  const list = [];
+  if (isRed) {
+    const lo = Math.round(selectedProd.sphMin*4), hi = Math.round(selectedProd.sphMax*4);
+    for (let v = lo; v <= hi; v++) list.push(v/4);
+  } else {
+    for (let v = -600; v <= 600; v += 25) list.push(v/100);
+  }
+  return list;
+}
+function cylValueList() {
+  const list = [0];
+  const hi = Math.round(selectedProd.cylMax*4);
+  for (let v = 1; v <= hi; v++) list.push(v/4);
+  return list;
+}
+function buildSphOptions(list) {
+  return list.map(v => { const s = v.toFixed(2); return `<option value="${s}">${v>=0?'+':''}${s}</option>`; }).join('');
+}
+function buildCylOptions(list) {
+  return list.map(v => { const s = v.toFixed(2); return `<option value="${s}">${v===0?'0.00':'+'+s}</option>`; }).join('');
+}
+function validCylsForSph(sph) {
+  const isRed = selectedProd.mfr === 'red';
+  const store = isRed ? RED_GRID : MI_GRID;
+  return cylValueList().filter(c => lookupGridDia(store, selectedProd.id, sph, c));
+}
+function validSphsForCyl(cyl) {
+  const isRed = selectedProd.mfr === 'red';
+  const store = isRed ? RED_GRID : MI_GRID;
+  return sphValueList().filter(s => lookupGridDia(store, selectedProd.id, s, cyl));
+}
+/* opts.preferValue: konkrétní hodnota, kterou upřednostnit, pokud je v přefiltrovaném
+   seznamu (obnova rozpracované položky z košíku). opts.preferZero: při čerstvém
+   nastavení čočky vždy raději 0 než dosavadní (cizí) hodnota. Jinak se snaží podržet
+   aktuální výběr, a pokud už v seznamu není, spadne na nejbližší k 0. */
+function refreshCylForSph(eye, opts) {
+  opts = opts || {};
+  let sph = parseFloat(document.getElementById(eye+'-sph').value);
+  if (isNaN(sph)) sph = 0;
+  const cylSel = document.getElementById(eye+'-cyl');
+  const current = parseFloat(cylSel.value);
+  let list = validCylsForSph(sph);
+  if (!list.length) list = cylValueList(); /* pojistka, ať select nikdy nezůstane úplně prázdný */
+  cylSel.innerHTML = buildCylOptions(list);
+  let pick = list[0] ?? 0;
+  if (opts.preferValue !== undefined && list.some(v => Math.abs(v-opts.preferValue) < 0.001)) {
+    pick = opts.preferValue;
+  } else if (!opts.preferZero && list.some(v => Math.abs(v-current) < 0.001)) {
+    pick = current;
+  } else if (list.some(v => v === 0)) {
+    pick = 0;
+  }
+  cylSel.value = pick.toFixed(2);
+}
+function refreshSphForCyl(eye, opts) {
+  opts = opts || {};
+  let cyl = parseFloat(document.getElementById(eye+'-cyl').value);
+  if (isNaN(cyl)) cyl = 0;
+  const sphSel = document.getElementById(eye+'-sph');
+  const current = parseFloat(sphSel.value);
+  let list = validSphsForCyl(cyl);
+  if (!list.length) list = sphValueList(); /* pojistka, ať select nikdy nezůstane úplně prázdný */
+  sphSel.innerHTML = buildSphOptions(list);
+  let pick = list[0] ?? 0;
+  if (opts.preferValue !== undefined && list.some(v => Math.abs(v-opts.preferValue) < 0.001)) {
+    pick = opts.preferValue;
+  } else if (list.some(v => Math.abs(v-current) < 0.001)) {
+    pick = current;
+  } else if (list.length) {
+    // nejbližší k 0 (nejbližší k aktuálně nastavenému, když padne mimo rozsah)
+    pick = list.reduce((best, v) => Math.abs(v-current) < Math.abs(best-current) ? v : best, list[0]);
+  }
+  sphSel.value = pick.toFixed(2);
 }
 
 document.getElementById('r-sph').innerHTML = sphOptions();
@@ -736,6 +821,25 @@ document.getElementById('l-cyl').innerHTML = cylOptions();
 document.getElementById('r-ax').innerHTML  = axOptions();
 document.getElementById('l-ax').innerHTML  = axOptions();
 ['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
+
+/* ── Bublina s počtem hodnot u každého Rx selectu (Sph/Cyl/Osa/Průměr, obě oči).
+   Sleduje select přes MutationObserver, takže se počet aktualizuje automaticky
+   při každé změně nabídky (výběr produktu, přepočet Ø podle Sph/Cyl atd.),
+   bez nutnosti dohledávat všechna místa, která select.innerHTML přepisují. ── */
+(function initRxCounters() {
+  const map = [
+    ['r-sph','r-sph-cnt'], ['r-cyl','r-cyl-cnt'], ['r-ax','r-ax-cnt'], ['r-dia','r-dia-cnt'],
+    ['l-sph','l-sph-cnt'], ['l-cyl','l-cyl-cnt'], ['l-ax','l-ax-cnt'], ['l-dia','l-dia-cnt']
+  ];
+  map.forEach(([selId, cntId]) => {
+    const sel = document.getElementById(selId);
+    const cnt = document.getElementById(cntId);
+    if (!sel || !cnt) return;
+    const refresh = () => { cnt.textContent = sel.options.length; };
+    refresh();
+    new MutationObserver(refresh).observe(sel, { childList: true });
+  });
+})();
 
 let selectedMfr = 'mi';
 let selectedProd = null;
@@ -782,7 +886,7 @@ function renderProductTable() {
           <td style="color:var(--muted);font-size:12px">${p.desc || '—'}</td>
           <td><div class="dia-pills">${allDias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
           <td>${p.sphMax>=0?'+':''}${p.sphMax.toFixed(2)} až ${p.sphMin>=0?'+':''}${p.sphMin.toFixed(2)}</td>
-          <td>−${p.cylMax.toFixed(2)}</td>
+          <td>+${p.cylMax.toFixed(2)}</td>
         `;
         tr.onclick = () => selectRedProduct(p, tr);
         tbody.appendChild(tr);
@@ -796,15 +900,17 @@ function renderProductTable() {
     MI_PRODUCTS.forEach(p => {
       const tr = document.createElement('tr');
       tr.className = 'pr';
+      const g = MI_GRID[p.id];
+      const allDias = g ? Array.from(new Set(g.dias.flat())).sort((a,b) => parseFloat(a) - parseFloat(b)) : [];
       tr.innerHTML = `
         <td><span class="radio"></span></td>
         <td><strong>${p.name}</strong></td>
         <td class="code">${p.code}</td>
         <td>${p.index}</td>
         <td style="color:var(--muted);font-size:12px">${p.coat}</td>
-        <td><div class="dia-pills">${p.dias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
-        <td>+6.00 až −6.00</td>
-        <td>−3.00</td>
+        <td><div class="dia-pills">${allDias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
+        <td>${p.sphMax>=0?'+':''}${p.sphMax.toFixed(2)} až ${p.sphMin>=0?'+':''}${p.sphMin.toFixed(2)}</td>
+        <td>+${p.cylMax.toFixed(2)}</td>
       `;
       tr.onclick = () => selectMiProduct(p, tr);
       tbody.appendChild(tr);
@@ -841,7 +947,6 @@ function setupRxForProduct() {
 
   if (selectedProd.mfr === 'red') {
     const sphHtml = sphOptionsRange(selectedProd.sphMin, selectedProd.sphMax);
-    const cylHtml = cylOptionsRange(selectedProd.cylMax);
     ['r-sph','l-sph'].forEach(id => {
       const s = document.getElementById(id);
       s.innerHTML = sphHtml;
@@ -852,29 +957,23 @@ function setupRxForProduct() {
       }
       s.selectedIndex = best;
     });
-    ['r-cyl','l-cyl'].forEach(id => { document.getElementById(id).innerHTML = cylHtml; document.getElementById(id).selectedIndex = 0; });
-    updateRedDia('r');
-    updateRedDia('l');
   } else {
-    document.getElementById('r-sph').innerHTML = sphOptions();
-    document.getElementById('l-sph').innerHTML = sphOptions();
-    document.getElementById('r-cyl').innerHTML = cylOptions();
-    document.getElementById('l-cyl').innerHTML = cylOptions();
+    const sphHtml = sphOptions();
+    document.getElementById('r-sph').innerHTML = sphHtml;
+    document.getElementById('l-sph').innerHTML = sphHtml;
     ['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
-    const dh = selectedProd.dias.map(d=>`<option value="${d}">Ø${d} mm</option>`).join('');
-    document.getElementById('r-dia').innerHTML = dh;
-    document.getElementById('l-dia').innerHTML = dh;
-    document.getElementById('r-dia').disabled = false;
-    document.getElementById('l-dia').disabled = false;
-    document.getElementById('r-dia-warn').style.display = 'none';
-    document.getElementById('l-dia-warn').style.display = 'none';
   }
+  ['r','l'].forEach(eye => refreshCylForSph(eye, { preferZero: true }));
+  updateDia('r');
+  updateDia('l');
   updateRecapButtonState();
 }
 
-/* ── RED Label: vyhledání dostupných Ø pro danou kombinaci Sph/Cyl dle digitalizovaných tabulek ── */
-function lookupRedDia(prodId, sph, cylMag) {
-  const g = RED_GRID[prodId];
+/* ── Vyhledání dostupných Ø pro danou kombinaci Sph/Cyl dle digitalizovaných tabulek
+   (společné pro RED_GRID i MI_GRID — oba mají stejnou strukturu: po sloupcích (Cyl)
+   seznam úseků [sphHigh, sphLow, indexDoDias]) ── */
+function lookupGridDia(store, prodId, sph, cylMag) {
+  const g = store[prodId];
   if (!g) return null;
   const col = g.grid.find(c => Math.abs(c[0]-cylMag) < 0.001);
   if (!col) return null;
@@ -884,14 +983,15 @@ function lookupRedDia(prodId, sph, cylMag) {
   return null;
 }
 
-function updateRedDia(eye) {
-  if (!selectedProd || selectedProd.mfr !== 'red') return;
+function updateDia(eye) {
+  if (!selectedProd) return;
+  const isRed = selectedProd.mfr === 'red';
   const sph = parseFloat(document.getElementById(eye+'-sph').value);
   const cyl = parseFloat(document.getElementById(eye+'-cyl').value);
   const cylMag = Math.abs(cyl);
   const diaSel = document.getElementById(eye+'-dia');
   const warn = document.getElementById(eye+'-dia-warn');
-  const dias = lookupRedDia(selectedProd.id, sph, cylMag);
+  const dias = lookupGridDia(isRed ? RED_GRID : MI_GRID, selectedProd.id, sph, cylMag);
   if (dias) {
     diaSel.innerHTML = dias.map(d=>`<option value="${d}">Ø${d} mm</option>`).join('');
     diaSel.disabled = false;
@@ -899,7 +999,7 @@ function updateRedDia(eye) {
   } else {
     diaSel.innerHTML = '<option value="">— nedostupné —</option>';
     diaSel.disabled = true;
-    warn.textContent = 'Tato kombinace Sph/Cyl není pro zvolenou čočku RED Label dostupná.';
+    warn.textContent = `Tato kombinace Sph/Cyl není pro zvolenou čočku ${isRed ? 'RED Label' : 'MI.OPTICS'} dostupná.`;
     warn.style.display = 'block';
   }
   updateRecapButtonState();
@@ -908,7 +1008,7 @@ function updateRedDia(eye) {
 function updateRecapButtonState() {
   const btnCart = document.getElementById('btn-add-cart');
   let ok = true;
-  if (selectedProd && selectedProd.mfr === 'red') {
+  if (selectedProd) {
     const rOk = document.getElementById('r-dia').value !== '';
     const lOk = document.getElementById('l-dia').value !== '';
     ok = rOk && lOk;
@@ -916,9 +1016,13 @@ function updateRecapButtonState() {
   btnCart.disabled = !ok;
 }
 
-function onRxChange(eye) {
+function onRxChange(eye, field) {
+  if (selectedProd) {
+    if (field === 'sph') refreshCylForSph(eye);
+    else if (field === 'cyl') refreshSphForCyl(eye);
+  }
   updateAxis(eye);
-  if (selectedProd && selectedProd.mfr === 'red') updateRedDia(eye);
+  if (selectedProd) updateDia(eye);
 }
 
 function updateAxis(eye) {
@@ -964,10 +1068,7 @@ let CART = [];
 
 function currentSelectionValid() {
   if (!selectedProd) return false;
-  if (selectedProd.mfr === 'red') {
-    return document.getElementById('r-dia').value !== '' && document.getElementById('l-dia').value !== '';
-  }
-  return true;
+  return document.getElementById('r-dia').value !== '' && document.getElementById('l-dia').value !== '';
 }
 
 function buildCartItem() {
@@ -1026,9 +1127,9 @@ function restoreRxValues(item) {
   ['r','l'].forEach(eye => {
     const src = item[eye];
     document.getElementById(eye+'-sph').value = src.sph;
-    document.getElementById(eye+'-cyl').value = src.cyl;
+    refreshCylForSph(eye, { preferValue: parseFloat(src.cyl) });
     updateAxis(eye);
-    if (selectedProd.mfr === 'red') updateRedDia(eye);
+    updateDia(eye);
     const diaSel = document.getElementById(eye+'-dia');
     if (src.dia && [...diaSel.options].some(o => o.value === src.dia)) diaSel.value = src.dia;
     if (src.ax) document.getElementById(eye+'-ax').value = src.ax;
