@@ -192,18 +192,23 @@
   .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; transition: background .25s ease, border-color .25s ease; }
   .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-bottom: 18px; }
 
-  /* Steps */
-  .steps { display: flex; gap: 0; margin-bottom: 22px; }
-  .step { flex: 1; padding: 11px 8px; text-align: center; font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-right: none; transition: background .2s ease, color .2s ease, border-color .2s ease; cursor: pointer; user-select: none; }
-  .step:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; }
-  .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
-  .step .sn { font-size: 16px; font-weight: 800; display: block; margin-bottom: 1px; }
-  .step.done { background: var(--active-bg); color: var(--accent); border-color: var(--active-border); }
-  .step.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; cursor: default; }
-  .step.done:hover { background: var(--hover-bg); }
-  .step:not(.active):not(.done):hover { background: var(--hover-bg); color: var(--text); }
-  .step.locked { cursor: not-allowed; }
-  .step.locked:hover { background: var(--card); color: var(--muted); }
+  /* Steps — progress bar (kolečka na lince, výplň ukazuje postup; kroky zůstávají klikací) */
+  .steps { position: relative; display: flex; margin: 4px 0 26px; }
+  .steps-track { position: absolute; top: 15px; left: 12.5%; right: 12.5%; height: 4px; border-radius: 4px; background: var(--border); overflow: hidden; transition: background .25s ease; }
+  .steps-fill { height: 100%; width: 0; background: var(--accent); border-radius: 4px; transition: width .45s cubic-bezier(.2,.8,.2,1), background .25s ease; }
+  .step { flex: 1; min-width: 0; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; text-align: center; transition: color .2s ease, opacity .2s ease; }
+  .step .sn { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: var(--card); border: 2px solid var(--border); color: var(--muted); transition: background .2s, border-color .2s, color .2s, box-shadow .2s, transform .15s; }
+  .step .sl { font-weight: 600; line-height: 1.25; }
+  .step.done { color: var(--accent); }
+  .step.done .sn { background: var(--accent); border-color: var(--accent); color: #fff; font-size: 0; }
+  .step.done .sn::after { content: '✓'; font-size: 15px; }
+  .step.active { color: var(--text); cursor: default; }
+  .step.active .sn { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 5px var(--active-bg); }
+  .step.active .sl { font-weight: 700; }
+  .step:not(.active):not(.locked):hover { color: var(--accent); }
+  .step:not(.active):not(.locked):hover .sn { border-color: var(--accent); transform: scale(1.08); }
+  .step.done:not(.locked):hover .sn { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .step.locked { cursor: not-allowed; opacity: .5; }
 
   /* Manufacturer grid */
   .mfr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -380,8 +385,6 @@
     .content { padding: 16px; }
     .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 90; }
     .sidebar-backdrop.show { display: block; animation: fade-up .15s ease; }
-    .steps { flex-wrap: wrap; }
-    .step { flex: 1 1 50%; }
     .rx-3, .rx-2 { grid-template-columns: 1fr; }
     .stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .card { padding: 16px; }
@@ -392,8 +395,11 @@
     .stats { grid-template-columns: 1fr 1fr; }
     .stat-n { font-size: 20px; }
     .login-box { padding: 32px 22px; }
-    .steps { gap: 6px; }
-    .step { flex: 1 1 100%; border-right: 1px solid var(--border) !important; border-radius: var(--radius) !important; }
+    .steps { margin-bottom: 20px; }
+    .steps-track { top: 13px; height: 3px; }
+    .step { font-size: 11px; gap: 6px; }
+    .step .sn { width: 30px; height: 30px; font-size: 12px; }
+    .step.active .sn { box-shadow: 0 0 0 4px var(--active-bg); }
   }
 </style>
 </head>
@@ -456,11 +462,12 @@
         <!-- NEW ORDER -->
         <div class="view active" id="view-new">
 
-          <div class="steps">
-            <div class="step active" id="step-0" onclick="goToStep(0)"><span class="sn">1</span>Výrobce</div>
-            <div class="step" id="step-1" onclick="goToStep(1)"><span class="sn">2</span>Čočka</div>
-            <div class="step locked" id="step-2" onclick="goToStep(2)"><span class="sn">3</span>Parametry Rx</div>
-            <div class="step" id="step-3" onclick="goToStep(3)"><span class="sn">4</span>Rekapitulace</div>
+          <div class="steps" id="steps" role="progressbar" aria-label="Postup objednávky" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1">
+            <div class="steps-track"><div class="steps-fill" id="steps-fill"></div></div>
+            <div class="step active" id="step-0" onclick="goToStep(0)"><span class="sn">1</span><span class="sl">Výrobce</span></div>
+            <div class="step" id="step-1" onclick="goToStep(1)"><span class="sn">2</span><span class="sl">Čočka</span></div>
+            <div class="step locked" id="step-2" onclick="goToStep(2)"><span class="sn">3</span><span class="sl">Parametry Rx</span></div>
+            <div class="step" id="step-3" onclick="goToStep(3)"><span class="sn">4</span><span class="sl">Rekapitulace</span></div>
           </div>
 
           <!-- S0 -->
@@ -1032,6 +1039,16 @@ function updateAxis(eye) {
   ax.disabled = false;
 }
 
+/* ── Progress bar nad kroky — výplň linky mezi kolečky podle aktuálního kroku
+   (krok 1 = 0 %, krok 4 = 100 %). ── */
+function setStepsProgress(n) {
+  const k = Math.max(0, Math.min(n, 3));
+  const fill = document.getElementById('steps-fill');
+  if (fill) fill.style.width = (k / 3 * 100) + '%';
+  const bar = document.getElementById('steps');
+  if (bar) bar.setAttribute('aria-valuenow', String(k + 1));
+}
+
 function goStep(n) {
   if (n !== 2 && editingCartIndex !== null) cancelCartItemEdit();
   ['s0','s1','s2','s3','s-ok'].forEach(id => document.getElementById(id).style.display = 'none');
@@ -1041,6 +1058,7 @@ function goStep(n) {
     else if (i===n) el.className='step active';
     else el.className='step';
   }
+  setStepsProgress(n);
   if (n===1) renderProductTable();
   if (n===3) renderCart();
   if (n<4) document.getElementById('s'+n).style.display = 'block';
@@ -1258,6 +1276,7 @@ function submitOrder() {
   document.getElementById('s-ok').style.display = 'block';
   document.getElementById('topbar-meta').textContent = '';
   for (let i=0;i<4;i++) document.getElementById('step-'+i).className = 'step done';
+  setStepsProgress(3);
   CART = [];
   updateCartBadge();
 }
