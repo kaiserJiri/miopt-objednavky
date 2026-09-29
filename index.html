@@ -697,10 +697,10 @@ const FIREBASE_CONFIG = {
   measurementId: "G-412XBG3KK6"
 };
 const EMAILJS_CONFIG = {
-  publicKey: "DOPLNIT",
-  serviceId: "DOPLNIT",
-  templateOrder: "DOPLNIT",    /* e-mail s objednávkou → ORDER_RECIPIENT */
-  templateConfirm: "DOPLNIT"   /* potvrzení → přihlášený zástupce */
+  publicKey: "8PvfIuLDpHtEhH_Mr",
+  serviceId: "service_5ujcwde",
+  templateOrder: "template_qkp798h",    /* e-mail s objednávkou → ORDER_RECIPIENT */
+  templateConfirm: "template_9xuqm3i"   /* potvrzení → přihlášený zástupce */
 };
 /* Kam chodí objednávky */
 const ORDER_RECIPIENT = "j.kaiser@mi-optics.cz";
@@ -1329,19 +1329,29 @@ function totalPairs(items) {
   return items.reduce((s, it) => s + (parseInt(it.pairs, 10) || 1), 0);
 }
 
-/* Tabulka objednávky do e-mailu (inline styly — e-mailové klienty nečtou <style>) */
+/* Položky objednávky do e-mailu — inline styly a tabulky (e-mailové klienty nečtou <style>).
+   Vkládá se do šablon EmailJS přes {{{items_html}}}. */
 function orderEmailHtml(order) {
-  const td = 'padding:4px 10px;border:1px solid #ddd;font-size:13px';
+  const th = 'padding:8px 10px;font:700 11px Arial,sans-serif;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;text-align:left;border-bottom:1px solid #e5e7eb;background:#f9fafb';
+  const td = 'padding:8px 10px;font:14px Arial,sans-serif;color:#111827;border-bottom:1px solid #f1f5f9';
+  const eye = (label, color) => `<span style="display:inline-block;width:22px;height:22px;border-radius:11px;background:${color};color:#ffffff;font:700 11px Arial,sans-serif;line-height:22px;text-align:center">${label}</span>`;
+  const row = (lbl, color, e) => `<tr><td style="${td}">${eye(lbl, color)}</td><td style="${td}">${esc(e.sph)}</td><td style="${td}">${esc(e.cyl)}</td><td style="${td}">${e.ax ? esc(e.ax) + '°' : '—'}</td><td style="${td}"><strong>Ø${esc(e.dia)}</strong></td></tr>`;
   return order.items.map((it, i) => `
-    <p style="margin:14px 0 4px;font-size:14px"><strong>${i+1}. ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${esc(it.name)}</strong><br>
-    <span style="color:#666;font-size:12px">Kód ${esc(it.code)} · index ${esc(it.index)} · ${esc(it.coat)} · ${pairsLabel(it.pairs)}</span></p>
-    <table style="border-collapse:collapse">
-      <tr><th style="${td}"></th><th style="${td}">Sph</th><th style="${td}">Cyl</th><th style="${td}">Osa</th><th style="${td}">Průměr</th></tr>
-      <tr><td style="${td}"><strong>P</strong></td><td style="${td}">${esc(it.r.sph)}</td><td style="${td}">${esc(it.r.cyl)}</td><td style="${td}">${it.r.ax ? esc(it.r.ax)+'°' : '—'}</td><td style="${td}">Ø${esc(it.r.dia)}</td></tr>
-      <tr><td style="${td}"><strong>L</strong></td><td style="${td}">${esc(it.l.sph)}</td><td style="${td}">${esc(it.l.cyl)}</td><td style="${td}">${it.l.ax ? esc(it.l.ax)+'°' : '—'}</td><td style="${td}">Ø${esc(it.l.dia)}</td></tr>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:10px;margin:0 0 16px;border-collapse:separate;overflow:hidden">
+  <tr><td style="padding:14px 16px;background:#ffffff">
+    <div style="font:700 11px Arial,sans-serif;color:#2563eb;text-transform:uppercase;letter-spacing:.5px">Položka ${i+1} · ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'}</div>
+    <div style="font:700 16px Arial,sans-serif;color:#111827;margin:4px 0 2px">${esc(it.name)}</div>
+    <div style="font:13px Arial,sans-serif;color:#6b7280">Kód <strong style="color:#111827">${esc(it.code)}</strong> · index ${esc(it.index)} · ${esc(it.coat)} · <strong style="color:#111827">${pairsLabel(it.pairs)}</strong></div>
+  </td></tr>
+  <tr><td style="padding:0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse">
+      <tr><th style="${th}">Oko</th><th style="${th}">Sph</th><th style="${th}">Cyl</th><th style="${th}">Osa</th><th style="${th}">Průměr</th></tr>
+      ${row('P', '#2563eb', it.r)}
+      ${row('L', '#7c3aed', it.l)}
     </table>
-    ${it.note ? `<p style="margin:4px 0;font-size:12px">Poznámka: ${esc(it.note)}</p>` : ''}
-  `).join('');
+  </td></tr>
+  ${it.note ? `<tr><td style="padding:10px 16px;background:#fffbeb;font:13px Arial,sans-serif;color:#92400e;border-top:1px solid #fde68a"><strong>Poznámka:</strong> ${esc(it.note)}</td></tr>` : ''}
+</table>`).join('');
 }
 function orderEmailText(order) {
   return order.items.map((it, i) =>
