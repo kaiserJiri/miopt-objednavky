@@ -11,6 +11,12 @@
   try { localStorage.removeItem('miopt-theme'); } catch (e) {}
 })();
 </script>
+<!-- Firebase (přihlášení + databáze objednávek) a EmailJS (odesílání e-mailů).
+     Pokud se knihovny nenačtou nebo není vyplněná konfigurace níže, appka běží v DEMO režimu. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -140,7 +146,10 @@
   .btn-primary { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; transition: background .15s, transform .1s; }
   .btn-primary:hover { background: var(--accent-hover); }
   .btn-primary:active { transform: scale(.98); }
+  .btn-primary:disabled { background: var(--disabled-color); cursor: wait; }
   .login-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 18px; line-height: 1.6; }
+  .login-error { font-size: 12.5px; color: var(--danger); background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); border-radius: 8px; padding: 8px 11px; margin-bottom: 14px; line-height: 1.45; }
+  .demo-flag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--badge-yellow-text); background: var(--badge-yellow-bg); padding: 2px 8px; border-radius: 20px; }
 
   /* ── APP ── */
   #app { display: none; }
@@ -285,6 +294,7 @@
   .cart-item .rtable { background: var(--card); border-radius: 8px; overflow: hidden; }
   .cart-item-foot { font-size: 12px; color: var(--muted); margin-top: 10px; }
   .cart-empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+  .submit-error { font-size: 12.5px; color: var(--danger); background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); border-radius: 8px; padding: 9px 12px; margin-top: 12px; line-height: 1.45; }
   .recap-box { margin-top: 14px; padding: 12px; background: var(--hover-bg); border-radius: var(--radius); border: 1px solid var(--border); transition: background .25s ease, border-color .25s ease; }
   .recap-box-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
   .recap-box-name { font-weight: 600; font-size: 13px; }
@@ -319,12 +329,16 @@
   .htable tbody tr:last-child td { border: none; }
   .htable tbody tr { transition: background .12s; cursor: pointer; }
   .htable tbody tr:hover { background: var(--hover-bg); }
+  .htable tbody tr.hist-msg { cursor: default; }
+  .htable tbody tr.hist-msg:hover { background: transparent; }
+  .htable tbody tr.hist-msg td { color: var(--muted); text-align: center; padding: 22px 12px; }
+  .hist-more { color: var(--muted); font-size: 12px; }
 
   /* Order detail modal */
   .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
   .modal-backdrop.show { display: flex; animation: fade-up .15s ease; }
   .modal { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); width: 640px; max-width: 100%; max-height: 86vh; overflow-y: auto; animation: pop-in .25s cubic-bezier(.2,.8,.2,1); transition: background .25s ease; }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); z-index: 2; }
   .modal-title { font-size: 15px; font-weight: 700; }
   .modal-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: background .12s, color .12s; }
   .modal-close:hover { background: var(--hover-bg); color: var(--text); }
@@ -355,6 +369,7 @@
   .success-box .icon { font-size: 48px; margin-bottom: 14px; animation: bounce-in .5s cubic-bezier(.3,1.6,.5,1); }
   .success-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
   .success-box p { color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+  .success-box p.ok-warn { color: var(--stat-orange); }
 
   /* ── Animations ── */
   @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -410,10 +425,13 @@
   <div class="login-box">
     <div class="login-brand">MI.OPTICS <span>· objednávkový systém</span></div>
     <h1>Přihlásit se</h1>
-    <div class="field"><label>E-mail</label><input type="email" id="login-email" value="novak@mi-optics.cz"></div>
-    <div class="field"><label>Heslo</label><input type="password" id="login-pass" value="demo1234"></div>
-    <button class="btn-primary" onclick="doLogin()">Přihlásit se</button>
-    <p class="login-note">Demo prostředí — přihlášení je simulované.<br>Účty obchodních zástupců zakládá administrátor.</p>
+    <div class="login-error" id="login-error" style="display:none"></div>
+    <form onsubmit="event.preventDefault(); doLogin();">
+      <div class="field"><label for="login-email">E-mail</label><input type="email" id="login-email" autocomplete="username" placeholder="jmeno@mi-optics.cz" required></div>
+      <div class="field"><label for="login-pass">Heslo</label><input type="password" id="login-pass" autocomplete="current-password" required></div>
+      <button type="submit" class="btn-primary" id="login-btn">Přihlásit se</button>
+    </form>
+    <p class="login-note" id="login-note">Účty obchodních zástupců zakládá administrátor.</p>
   </div>
 </div>
 
@@ -439,10 +457,10 @@
       </nav>
       <div class="sidebar-user">
         <div class="user-card">
-          <div class="user-avatar">PN</div>
+          <div class="user-avatar" id="user-avatar">—</div>
           <div class="user-info">
-            <div class="rep-name">Pavel Nováček</div>
-            <div class="rep-email">novak@mi-optics.cz</div>
+            <div class="rep-name" id="rep-name">—</div>
+            <div class="rep-email" id="rep-email">—</div>
           </div>
         </div>
         <button class="logout-btn" onclick="doLogout()">← Odhlásit se</button>
@@ -453,6 +471,7 @@
       <div class="topbar">
         <button class="menu-toggle" onclick="openMobileNav()" title="Menu" aria-label="Otevřít menu">☰</button>
         <div class="topbar-title" id="topbar-title">Nová objednávka</div>
+        <span class="demo-flag" id="demo-flag" style="display:none" title="Firebase / EmailJS nejsou nastavené — objednávky se nikam neukládají ani neposílají">Demo</span>
         <div class="cart-badge" id="cart-badge" onclick="goToCart()" style="display:none">🛒 <span id="cart-count">0</span></div>
         <div class="topbar-meta" id="topbar-meta"></div>
       </div>
@@ -482,7 +501,7 @@
                 </div>
                 <div class="mfr-card red-brand" id="mfr-red" onclick="selMfr(this,'red')">
                   <div class="mfr-name">RED Label</div>
-                  <div class="mfr-desc">Zakázkové čočky — Ø průměr se řídí Sph/Cyl dle rozsahové tabulky</div>
+                  <div class="mfr-desc">Skladové jednoohniskové čočky</div>
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
                 <div class="mfr-card disabled">
@@ -563,6 +582,7 @@
             <div class="card">
               <div class="card-title">Rekapitulace objednávky — košík</div>
               <div id="cart-list"></div>
+              <div class="submit-error" id="submit-error" style="display:none"></div>
             </div>
             <div class="abar abar-sticky">
               <button class="btn-sec" onclick="goStep(0)">+ Přidat další čočky</button>
@@ -575,8 +595,8 @@
             <div class="card">
               <div class="success-box">
                 <div class="icon">✅</div>
-                <h2>Objednávka odeslána!</h2>
-                <p>Potvrzení bylo zapsáno do systému.</p>
+                <h2 id="ok-title">Objednávka odeslána!</h2>
+                <p id="ok-msg">Potvrzení bylo zapsáno do systému.</p>
                 <button class="btn-primary" style="width:auto;padding:10px 26px" onclick="resetOrder()">+ Nová objednávka</button>
               </div>
             </div>
@@ -589,16 +609,16 @@
             <div class="card-title">Přehled objednávek</div>
             <div class="table-scroll">
             <table class="htable">
-              <thead><tr><th>Č.</th><th>Datum</th><th>Produkt</th><th>Kód</th><th>Stav</th></tr></thead>
+              <thead><tr><th>Č.</th><th>Datum</th><th>Položky</th><th>Párů</th><th>Stav</th></tr></thead>
               <tbody id="hist-tbody"></tbody>
             </table>
             </div>
           </div>
           <div class="stats">
-            <div class="stat c-blue"><div class="stat-n">31</div><div class="stat-l">Objednávek celkem</div></div>
-            <div class="stat c-green"><div class="stat-n">27</div><div class="stat-l">Doručeno</div></div>
-            <div class="stat c-orange"><div class="stat-n">3</div><div class="stat-l">Odesláno</div></div>
-            <div class="stat c-purple"><div class="stat-n">1</div><div class="stat-l">Čeká</div></div>
+            <div class="stat c-blue"><div class="stat-n" id="st-total">0</div><div class="stat-l">Objednávek celkem</div></div>
+            <div class="stat c-green"><div class="stat-n" id="st-done">0</div><div class="stat-l">Doručeno</div></div>
+            <div class="stat c-orange"><div class="stat-n" id="st-ship">0</div><div class="stat-l">Odesláno</div></div>
+            <div class="stat c-purple"><div class="stat-n" id="st-wait">0</div><div class="stat-l">Čeká</div></div>
           </div>
         </div>
 
@@ -610,33 +630,13 @@
               <button class="modal-close" onclick="closeOrderModal()" aria-label="Zavřít">✕</button>
             </div>
             <div class="modal-body">
-              <div class="modal-grid">
-                <table class="rtable">
-                  <tr class="sub-hdr"><td colspan="2">Objednávka</td></tr>
-                  <tr><td>Číslo</td><td id="om-id">—</td></tr>
-                  <tr><td>Datum</td><td id="om-date">—</td></tr>
-                  <tr><td>Zákazník</td><td id="om-customer">—</td></tr>
-                  <tr><td>Stav</td><td id="om-status">—</td></tr>
-                </table>
-                <table class="rtable">
-                  <tr class="sub-hdr"><td colspan="2">Čočka</td></tr>
-                  <tr><td>Výrobce</td><td id="om-mfr">MI.OPTICS</td></tr>
-                  <tr><td>Produkt</td><td id="om-product">—</td></tr>
-                  <tr><td>Kód</td><td id="om-code">—</td></tr>
-                  <tr><td>Index</td><td id="om-index">—</td></tr>
-                  <tr><td>Úprava</td><td id="om-coat">—</td></tr>
-                  <tr><td>Počet párů</td><td id="om-pairs">—</td></tr>
-                  <tr><td>Poznámka</td><td id="om-note">—</td></tr>
-                </table>
-              </div>
-              <div class="rx-divider"></div>
-              <table class="rtable">
-                <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
-                <tr><td>Sph</td><td id="om-rsph">—</td><td id="om-lsph">—</td></tr>
-                <tr><td>Cyl</td><td id="om-rcyl">—</td><td id="om-lcyl">—</td></tr>
-                <tr><td>Osa</td><td id="om-rax">—</td><td id="om-lax">—</td></tr>
-                <tr><td>Průměr</td><td id="om-rdia">—</td><td id="om-ldia">—</td></tr>
+              <table class="rtable" style="margin-bottom:14px">
+                <tr><td>Číslo</td><td id="om-id">—</td></tr>
+                <tr><td>Datum</td><td id="om-date">—</td></tr>
+                <tr><td>Zadal</td><td id="om-rep">—</td></tr>
+                <tr><td>Stav</td><td id="om-status">—</td></tr>
               </table>
+              <div id="om-items"></div>
             </div>
           </div>
         </div>
@@ -663,8 +663,8 @@
         <div class="view" id="view-prof">
           <div class="card" style="max-width:440px">
             <table class="rtable">
-              <tr><td>Jméno</td><td>Pavel Nováček</td></tr>
-              <tr><td>E-mail</td><td>novak@mi-optics.cz</td></tr>
+              <tr><td>Jméno</td><td id="prof-name">—</td></tr>
+              <tr><td>E-mail</td><td id="prof-email">—</td></tr>
               <tr><td>Telefon</td><td>+420 379 433 912</td></tr>
               <tr><td>Adresa</td><td>Nádražní 142, 344 01 Domažlice</td></tr>
               <tr><td>Zákaznické číslo</td><td>100482</td></tr>
@@ -680,6 +680,51 @@
 </div>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════════════
+   KONFIGURACE — vyplň podle návodu „Nastavení Firebase + EmailJS“.
+   Dokud tu zůstane „DOPLNIT“, appka běží v DEMO režimu: přihlášení je
+   simulované, objednávky se nikam neukládají a e-maily se neposílají.
+   Údaje níže nejsou tajné (jsou vidět v každém prohlížeči) — bezpečnost
+   drží pravidla Firestore a to, že účty zakládá jen administrátor.
+   ═══════════════════════════════════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBWtQwHaqEgPYqSC_8lST67AvaasQWRkZ0",
+  authDomain: "objednavkovy-system-46cca.firebaseapp.com",
+  projectId: "objednavkovy-system-46cca",
+  storageBucket: "objednavkovy-system-46cca.firebasestorage.app",
+  messagingSenderId: "216650953831",
+  appId: "1:216650953831:web:43feebd9b95df0bbb910c2",
+  measurementId: "G-412XBG3KK6"
+};
+const EMAILJS_CONFIG = {
+  publicKey: "DOPLNIT",
+  serviceId: "DOPLNIT",
+  templateOrder: "DOPLNIT",    /* e-mail s objednávkou → ORDER_RECIPIENT */
+  templateConfirm: "DOPLNIT"   /* potvrzení → přihlášený zástupce */
+};
+/* Kam chodí objednávky */
+const ORDER_RECIPIENT = "j.kaiser@mi-optics.cz";
+/* Jména zástupců podle e-mailu (Firebase ukládá jen e-mail). Nový zástupce = nový řádek. */
+const REPS = {
+  "dusek@mi-optics.cz":    { name: "Richard Dušek" },
+  "j.kaiser@mi-optics.cz": { name: "Jiří Kaiser" }
+};
+
+const FB_ENABLED   = !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLNIT") && typeof firebase !== "undefined";
+const MAIL_ENABLED = !String(EMAILJS_CONFIG.publicKey).startsWith("DOPLNIT") && typeof emailjs !== "undefined";
+let fbAuth = null, fbDb = null;
+if (FB_ENABLED) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  fbAuth = firebase.auth();
+  fbDb = firebase.firestore();
+}
+if (MAIL_ENABLED) emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+
+/* Ošetření textu vkládaného do HTML (poznámky zadává uživatel) */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 /* ── MI.OPTICS: data digitalizovaná 1:1 z MIOPTICS_rozsahy.pdf (9 produktů, Sph×Cyl → Ø) ──
    Stejný princip jako RED_GRID níže: pro každý produkt seznam "dias" (sady průměrů, které
    graf pro danou buňku nabízí) + "grid" po sloupcích (Cyl), v každém sloupci úseky
@@ -871,7 +916,7 @@ function renderProductTable() {
       <th style="width:28px"></th>
       <th>Produkt</th><th>Kód</th><th>Index</th><th>Úprava</th><th>Průměr</th><th>Rozsah Sph</th><th>Cyl (max)</th>
     </tr>`;
-    const groups = [['Org','Red Org — organické čočky'], ['Tri','Red Tri — trifokální'], ['Min','Red Min — minerální čočky']];
+    const groups = [['Org','Red Org — organické čočky'], ['Tri','Red Tri — Trivex'], ['Min','Red Min — minerální čočky']];
     groups.forEach(([fam, label]) => {
       const items = RED_PRODUCTS.filter(p => p.family === fam);
       if (!items.length) return;
@@ -1206,27 +1251,29 @@ function pairsLabel(n) {
   return v + (v === 1 ? ' pár' : v < 5 ? ' páry' : ' párů');
 }
 
-function cartItemHtml(item, i) {
+/* i = index v košíku (tlačítka upravit/odebrat); readOnly = zobrazení v detailu historie */
+function cartItemHtml(item, i, readOnly) {
+  const actions = readOnly ? '' : `
+        <div class="cart-item-actions">
+          <button class="cart-item-icon-btn" onclick="editCartItem(${i})" title="Upravit položku" aria-label="Upravit položku">✎</button>
+          <button class="cart-item-icon-btn cart-item-remove" onclick="removeCartItem(${i})" title="Odebrat z košíku" aria-label="Odebrat z košíku">✕</button>
+        </div>`;
   return `
     <div class="cart-item">
       <div class="cart-item-head">
         <div>
-          <div class="cart-item-title">${item.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${item.name}</div>
-          <div class="cart-item-sub">${item.index}${item.code !== '—' ? ' · ' + item.code : ''} · ${item.coat}</div>
-        </div>
-        <div class="cart-item-actions">
-          <button class="cart-item-icon-btn" onclick="editCartItem(${i})" title="Upravit položku" aria-label="Upravit položku">✎</button>
-          <button class="cart-item-icon-btn cart-item-remove" onclick="removeCartItem(${i})" title="Odebrat z košíku" aria-label="Odebrat z košíku">✕</button>
-        </div>
+          <div class="cart-item-title">${item.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${esc(item.name)}</div>
+          <div class="cart-item-sub">${esc(item.index)}${item.code && item.code !== '—' ? ' · ' + esc(item.code) : ''} · ${esc(item.coat)}</div>
+        </div>${actions}
       </div>
       <table class="rtable">
         <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
-        <tr><td>Sph</td><td>${item.r.sph || '—'}</td><td>${item.l.sph || '—'}</td></tr>
-        <tr><td>Cyl</td><td>${item.r.cyl || '—'}</td><td>${item.l.cyl || '—'}</td></tr>
-        <tr><td>Osa</td><td>${item.r.ax ? item.r.ax + '°' : '—'}</td><td>${item.l.ax ? item.l.ax + '°' : '—'}</td></tr>
-        <tr><td>Průměr</td><td>${item.r.dia ? 'Ø' + item.r.dia + ' mm' : '—'}</td><td>${item.l.dia ? 'Ø' + item.l.dia + ' mm' : '—'}</td></tr>
+        <tr><td>Sph</td><td>${esc(item.r.sph) || '—'}</td><td>${esc(item.l.sph) || '—'}</td></tr>
+        <tr><td>Cyl</td><td>${esc(item.r.cyl) || '—'}</td><td>${esc(item.l.cyl) || '—'}</td></tr>
+        <tr><td>Osa</td><td>${item.r.ax ? esc(item.r.ax) + '°' : '—'}</td><td>${item.l.ax ? esc(item.l.ax) + '°' : '—'}</td></tr>
+        <tr><td>Průměr</td><td>${item.r.dia ? 'Ø' + esc(item.r.dia) + ' mm' : '—'}</td><td>${item.l.dia ? 'Ø' + esc(item.l.dia) + ' mm' : '—'}</td></tr>
       </table>
-      <div class="cart-item-foot">Počet párů: <strong>${pairsLabel(item.pairs)}</strong>${item.note ? ' · Poznámka: ' + item.note : ''}</div>
+      <div class="cart-item-foot">Počet párů: <strong>${pairsLabel(item.pairs)}</strong>${item.note ? ' · Poznámka: ' + esc(item.note) : ''}</div>
     </div>
   `;
 }
@@ -1244,6 +1291,7 @@ function renderCartList(containerId, emptyMsg) {
 function renderCart() {
   const submitBtn = document.getElementById('btn-submit-order');
   if (submitBtn) submitBtn.disabled = !CART.length;
+  document.getElementById('submit-error').style.display = 'none';
   renderCartList('cart-list', 'Košík je zatím prázdný — vraťte se o krok zpět a přidejte čočku.');
 }
 
@@ -1271,7 +1319,133 @@ function goToCart() {
   goStep(3);
 }
 
-function submitOrder() {
+/* ═══ Odeslání objednávky: 1) uložit do Firestore  2) poslat 2 e-maily ═══ */
+function fmtDate(d) {
+  if (!d) return '—';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function totalPairs(items) {
+  return items.reduce((s, it) => s + (parseInt(it.pairs, 10) || 1), 0);
+}
+
+/* Tabulka objednávky do e-mailu (inline styly — e-mailové klienty nečtou <style>) */
+function orderEmailHtml(order) {
+  const td = 'padding:4px 10px;border:1px solid #ddd;font-size:13px';
+  return order.items.map((it, i) => `
+    <p style="margin:14px 0 4px;font-size:14px"><strong>${i+1}. ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${esc(it.name)}</strong><br>
+    <span style="color:#666;font-size:12px">Kód ${esc(it.code)} · index ${esc(it.index)} · ${esc(it.coat)} · ${pairsLabel(it.pairs)}</span></p>
+    <table style="border-collapse:collapse">
+      <tr><th style="${td}"></th><th style="${td}">Sph</th><th style="${td}">Cyl</th><th style="${td}">Osa</th><th style="${td}">Průměr</th></tr>
+      <tr><td style="${td}"><strong>P</strong></td><td style="${td}">${esc(it.r.sph)}</td><td style="${td}">${esc(it.r.cyl)}</td><td style="${td}">${it.r.ax ? esc(it.r.ax)+'°' : '—'}</td><td style="${td}">Ø${esc(it.r.dia)}</td></tr>
+      <tr><td style="${td}"><strong>L</strong></td><td style="${td}">${esc(it.l.sph)}</td><td style="${td}">${esc(it.l.cyl)}</td><td style="${td}">${it.l.ax ? esc(it.l.ax)+'°' : '—'}</td><td style="${td}">Ø${esc(it.l.dia)}</td></tr>
+    </table>
+    ${it.note ? `<p style="margin:4px 0;font-size:12px">Poznámka: ${esc(it.note)}</p>` : ''}
+  `).join('');
+}
+function orderEmailText(order) {
+  return order.items.map((it, i) =>
+    `${i+1}. ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${it.name} (kód ${it.code}), ${pairsLabel(it.pairs)}\n` +
+    `   P: Sph ${it.r.sph} Cyl ${it.r.cyl} Osa ${it.r.ax || '—'} Ø${it.r.dia}\n` +
+    `   L: Sph ${it.l.sph} Cyl ${it.l.cyl} Osa ${it.l.ax || '—'} Ø${it.l.dia}` +
+    (it.note ? `\n   Poznámka: ${it.note}` : '')
+  ).join('\n\n');
+}
+
+async function sendOrderEmails(order) {
+  if (!MAIL_ENABLED) return { skipped: true };
+  const base = {
+    order_no: order.orderNo,
+    order_date: fmtDate(order.dateObj),
+    rep_name: order.repName,
+    rep_email: order.repEmail,
+    items_count: order.items.length,
+    total_pairs: totalPairs(order.items),
+    items_html: orderEmailHtml(order),
+    items_text: orderEmailText(order),
+  };
+  const res = await Promise.allSettled([
+    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateOrder,   Object.assign({ to_email: ORDER_RECIPIENT }, base)),
+    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateConfirm, Object.assign({ to_email: order.repEmail }, base)),
+  ]);
+  res.forEach(r => { if (r.status === 'rejected') console.error('EmailJS:', r.reason); });
+  return { orderOk: res[0].status === 'fulfilled', confirmOk: res[1].status === 'fulfilled' };
+}
+
+/* Uloží objednávku; číslo objednávky je průběžné (counters/orders), přiděleno v transakci */
+async function saveOrder(items) {
+  const base = {
+    uid: currentUser.uid,
+    repEmail: currentUser.email,
+    repName: currentUser.name,
+    status: 'wait',
+    items: items,
+  };
+  if (!FB_ENABLED) {
+    const no = String(demoOrderSeq++);
+    const order = Object.assign({ id: 'demo-' + no, orderNo: no, dateObj: new Date() }, base);
+    ORDERS.unshift(order);
+    return order;
+  }
+  const counterRef = fbDb.collection('counters').doc('orders');
+  const orderRef = fbDb.collection('orders').doc();
+  const no = await fbDb.runTransaction(async tx => {
+    const snap = await tx.get(counterRef);
+    const next = snap.exists && snap.data().next ? snap.data().next : 1001;
+    tx.set(counterRef, { next: next + 1 });
+    tx.set(orderRef, Object.assign({ orderNo: String(next), createdAt: firebase.firestore.FieldValue.serverTimestamp() }, base));
+    return String(next);
+  });
+  const order = Object.assign({ id: orderRef.id, orderNo: no, dateObj: new Date() }, base);
+  ORDERS.unshift(order);
+  return order;
+}
+
+async function submitOrder() {
+  if (!CART.length || !currentUser) return;
+  const btn = document.getElementById('btn-submit-order');
+  const errBox = document.getElementById('submit-error');
+  errBox.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Odesílám…';
+
+  /* do databáze a e-mailu jde jen to podstatné (bez interního _prod) */
+  const items = CART.map(it => ({ mfr: it.mfr, name: it.name, code: it.code, index: it.index, coat: it.coat,
+    pairs: it.pairs, note: it.note, r: Object.assign({}, it.r), l: Object.assign({}, it.l) }));
+
+  let order;
+  try {
+    order = await saveOrder(items);
+  } catch (e) {
+    console.error('Uložení objednávky selhalo:', e);
+    errBox.textContent = 'Objednávku se nepodařilo uložit (' + (e.code || e.message || e) + '). Košík zůstal zachovaný — zkuste to prosím znovu.';
+    errBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '✓ Odeslat objednávku';
+    return;
+  }
+
+  const mail = await sendOrderEmails(order);
+  btn.disabled = false;
+  btn.textContent = '✓ Odeslat objednávku';
+
+  const msg = document.getElementById('ok-msg');
+  msg.classList.remove('ok-warn');
+  document.getElementById('ok-title').textContent = `Objednávka #${order.orderNo} odeslána!`;
+  if (!FB_ENABLED) {
+    msg.textContent = 'DEMO režim — objednávka se nikam neuložila ani neodeslala (Firebase/EmailJS nejsou nastavené).';
+    msg.classList.add('ok-warn');
+  } else if (mail.skipped) {
+    msg.textContent = 'Objednávka je uložená v historii. E-maily se neposlaly — EmailJS zatím není nastavené.';
+    msg.classList.add('ok-warn');
+  } else if (mail.orderOk && mail.confirmOk) {
+    msg.textContent = `Objednávka je uložená v historii a odeslaná na ${ORDER_RECIPIENT}. Potvrzení přijde na ${order.repEmail}.`;
+  } else {
+    const failed = [!mail.orderOk && `objednávka na ${ORDER_RECIPIENT}`, !mail.confirmOk && `potvrzení na ${order.repEmail}`].filter(Boolean).join(' a ');
+    msg.textContent = `Objednávka je uložená v historii, ale nepodařilo se odeslat: ${failed}. Dejte prosím vědět e-mailem nebo telefonem.`;
+    msg.classList.add('ok-warn');
+  }
+
   document.getElementById('s3').style.display = 'none';
   document.getElementById('s-ok').style.display = 'block';
   document.getElementById('topbar-meta').textContent = '';
@@ -1279,6 +1453,7 @@ function submitOrder() {
   setStepsProgress(3);
   CART = [];
   updateCartBadge();
+  renderHistoryTable();
 }
 
 function resetOrder() {
@@ -1306,19 +1481,108 @@ function showView(v) {
   document.getElementById('nav-'+v).classList.add('active');
   const t = {new:'Nová objednávka', hist:'Historie objednávek', prof:'Profil'};
   document.getElementById('topbar-title').textContent = t[v];
+  if (v === 'hist') loadHistory();
   closeMobileNav();
 }
 
-function doLogin() {
+/* ═══ Přihlášení ═══ */
+let currentUser = null;   /* { uid, email, name } */
+
+function repNameFor(email) {
+  const r = REPS[(email || '').toLowerCase()];
+  if (r) return r.name;
+  const local = (email || '').split('@')[0];
+  return local ? local.charAt(0).toUpperCase() + local.slice(1) : '—';
+}
+function initials(name) {
+  return name.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '—';
+}
+
+function showLoginError(text) {
+  const box = document.getElementById('login-error');
+  box.textContent = text;
+  box.style.display = text ? 'block' : 'none';
+}
+
+function authErrorText(e) {
+  const c = (e && e.code) || '';
+  if (['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-login-credentials','auth/invalid-email'].includes(c))
+    return 'Nesprávný e-mail nebo heslo.';
+  if (c === 'auth/too-many-requests') return 'Příliš mnoho pokusů. Zkuste to prosím za pár minut.';
+  if (c === 'auth/network-request-failed') return 'Nepodařilo se spojit se serverem. Zkontrolujte připojení k internetu.';
+  if (c === 'auth/operation-not-supported-in-this-environment' || c === 'auth/unauthorized-domain')
+    return 'Přihlášení z této adresy není povolené. Appku otevřete z webu (GitHub Pages), ne jako soubor z disku.';
+  return 'Přihlášení se nezdařilo (' + (c || e) + ').';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  showLoginError('');
+  if (!email || !pass) { showLoginError('Vyplňte e-mail i heslo.'); return; }
+  if (!FB_ENABLED) {
+    enterApp({ uid: 'demo', email: email.toLowerCase() });
+    return;
+  }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Přihlašuji…';
+  try {
+    await fbAuth.signInWithEmailAndPassword(email, pass);
+    /* zbytek zařídí onAuthStateChanged → enterApp */
+  } catch (e) {
+    showLoginError(authErrorText(e));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Přihlásit se';
+  }
+}
+
+function enterApp(user) {
+  currentUser = { uid: user.uid, email: (user.email || '').toLowerCase(), name: repNameFor(user.email) };
+  document.getElementById('rep-name').textContent = currentUser.name;
+  document.getElementById('rep-email').textContent = currentUser.email;
+  document.getElementById('user-avatar').textContent = initials(currentUser.name);
+  document.getElementById('prof-name').textContent = currentUser.name;
+  document.getElementById('prof-email').textContent = currentUser.email;
+  document.getElementById('login-pass').value = '';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  historyLoaded = false;
+  if (!FB_ENABLED) ORDERS = demoOrders();
   updateStepLocks();
 }
-function doLogout() {
+
+function leaveApp() {
+  currentUser = null;
+  ORDERS = [];
+  historyLoaded = false;
+  renderHistoryTable();
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  showView('new');
   resetOrder();
 }
+
+function doLogout() {
+  if (FB_ENABLED) fbAuth.signOut();   /* onAuthStateChanged(null) → leaveApp */
+  else leaveApp();
+}
+
+(function initAuth() {
+  const note = document.getElementById('login-note');
+  if (!FB_ENABLED) {
+    document.getElementById('demo-flag').style.display = 'inline-block';
+    note.innerHTML = '<span class="demo-flag">Demo</span><br>Firebase zatím není nastavený — přihlášení je simulované (libovolný e-mail a heslo).';
+    return;
+  }
+  if (!MAIL_ENABLED) document.getElementById('demo-flag').style.display = 'inline-block';
+  if (location.protocol === 'file:') {
+    showLoginError('Appka je otevřená jako soubor z disku — přihlášení přes Firebase tak nefunguje. Otevřete ji z webové adresy (GitHub Pages).');
+  }
+  fbAuth.onAuthStateChanged(user => {
+    if (user) enterApp(user);
+    else if (currentUser) leaveApp();
+  });
+})();
 
 /* ── Dark mode ── */
 /* Motiv se VŽDY řídí systémem — nic se natrvalo neukládá, takže appka po
@@ -1353,57 +1617,85 @@ if (window.matchMedia) {
   if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
 }
 
-/* ── Historie objednávek ── */
+/* ═══ Historie objednávek — z Firestore (kolekce „orders“, jen objednávky přihlášeného) ═══ */
 const STATUS_LABEL = { wait: 'Čeká', ship: 'Odesláno', done: 'Doručeno' };
-const ORDERS = [
-  { id:'#3124', date:'13. 9. 2026', customer:'Optika Svoboda, Praha 6', product:'Plast 1,61 Super AR', code:'305.014', index:'1,61', coat:'Tvrzení + Super AR', status:'wait', pairs:1, note:'',
-    r:{sph:'-2.25', cyl:'-0.75', ax:'90', dia:'65', h:'18'}, l:{sph:'-2.00', cyl:'-0.50', ax:'85', dia:'65', h:'18'} },
-  { id:'#3123', date:'11. 9. 2026', customer:'Oční optika Dvořák, Plzeň', product:'Plast 1,56 Digital Lotus Max', code:'310.083', index:'1,56', coat:'BLC technologie + Lotus Max', status:'ship', pairs:1, note:'',
-    r:{sph:'+1.50', cyl:'0.00', ax:'', dia:'70', h:'19'}, l:{sph:'+1.75', cyl:'-0.25', ax:'170', dia:'70', h:'19'} },
-  { id:'#3122', date:'10. 9. 2026', customer:'Optika Horní, Domažlice', product:'Plast 1,5 Super AR', code:'305.011', index:'1,5', coat:'Tvrzení + Super AR', status:'ship', pairs:1, note:'Spěchá, prosím expres.',
-    r:{sph:'-0.75', cyl:'0.00', ax:'', dia:'60', h:'17'}, l:{sph:'-1.00', cyl:'0.00', ax:'', dia:'60', h:'17'} },
-  { id:'#3121', date:'08. 9. 2026', customer:'Optika Marek, Tachov', product:'Plast Photoactive 1,56 Super AR', code:'305.023', index:'1,56', coat:'Fototropní (hnědá/šedá 9–70 %) + Super AR', status:'done', pairs:2, note:'',
-    r:{sph:'-3.50', cyl:'-1.25', ax:'15', dia:'65', h:'18'}, l:{sph:'-3.25', cyl:'-1.00', ax:'175', dia:'65', h:'18'} },
-  { id:'#3120', date:'05. 9. 2026', customer:'Oční centrum Procházka, Klatovy', product:'Plast 1,61 AS Super AR', code:'305.015', index:'1,61 (asférická)', coat:'Tvrzení + Super AR', status:'done', pairs:1, note:'',
-    r:{sph:'-5.75', cyl:'-0.50', ax:'60', dia:'65', h:'19'}, l:{sph:'-6.00', cyl:'-0.75', ax:'120', dia:'65', h:'19'} },
-  { id:'#3119', date:'03. 9. 2026', customer:'Oční optika Dvořák, Plzeň', product:'Plast 1,50 Lotus Max', code:'309.071', index:'1,5', coat:'Lotus Max', status:'done', pairs:1, note:'',
-    r:{sph:'+0.50', cyl:'-0.25', ax:'10', dia:'65', h:'18'}, l:{sph:'+0.75', cyl:'0.00', ax:'', dia:'65', h:'18'} },
-];
+let ORDERS = [];
+let historyLoaded = false;
+let demoOrderSeq = 3125;
+
+/* Ukázková data jen pro DEMO režim (bez Firebase) */
+function demoOrders() {
+  const mk = (no, d, status, name, code, index, coat, pairs, note, r, l) =>
+    ({ id: 'demo-' + no, orderNo: no, dateObj: new Date(d), status, repName: currentUser ? currentUser.name : '', repEmail: currentUser ? currentUser.email : '',
+       items: [{ mfr: 'mi', name, code, index, coat, pairs: String(pairs), note, r, l }] });
+  return [
+    mk('3124', '2026-09-13T10:12', 'wait', 'Plast 1,61 Super AR', '305.014', '1,61', 'Tvrzení + Super AR', 1, '',
+      {sph:'-2.25', cyl:'+0.75', ax:'90', dia:'65'}, {sph:'-2.00', cyl:'+0.50', ax:'85', dia:'65'}),
+    mk('3123', '2026-09-11T14:40', 'ship', 'Plast 1,56 Digital Lotus Max', '310.083', '1,56', 'BLC technologie + Lotus Max', 1, '',
+      {sph:'+1.50', cyl:'0.00', ax:'', dia:'70'}, {sph:'+1.75', cyl:'+0.25', ax:'170', dia:'70'}),
+    mk('3122', '2026-09-10T09:05', 'ship', 'Plast 1,5 Super AR', '305.011', '1,5', 'Tvrzení + Super AR', 1, 'Spěchá, prosím expres.',
+      {sph:'-0.75', cyl:'0.00', ax:'', dia:'60'}, {sph:'-1.00', cyl:'0.00', ax:'', dia:'60'}),
+    mk('3121', '2026-09-08T16:22', 'done', 'Plast Photoactive 1,56 Super AR', '305.023', '1,56', 'Fototropní (hnědá/šedá 9–70 %) + Super AR', 2, '',
+      {sph:'-3.50', cyl:'+1.25', ax:'15', dia:'65'}, {sph:'-3.25', cyl:'+1.00', ax:'175', dia:'65'}),
+  ];
+}
+
+function histMessage(text) {
+  document.getElementById('hist-tbody').innerHTML = `<tr class="hist-msg"><td colspan="5">${text}</td></tr>`;
+}
+
+async function loadHistory() {
+  if (!currentUser) return;
+  if (!FB_ENABLED || historyLoaded) { renderHistoryTable(); return; }
+  histMessage('Načítám objednávky…');
+  try {
+    /* Filtrujeme jen podle uid a řadíme až v prohlížeči — kombinace where+orderBy by
+       ve Firestore vyžadovala ruční založení složeného indexu. */
+    const snap = await fbDb.collection('orders').where('uid', '==', currentUser.uid).get();
+    ORDERS = snap.docs.map(doc => {
+      const d = doc.data();
+      return Object.assign({ id: doc.id }, d, { dateObj: d.createdAt ? d.createdAt.toDate() : new Date() });
+    }).sort((a, b) => (b.dateObj - a.dateObj) || (parseInt(b.orderNo, 10) - parseInt(a.orderNo, 10)));
+    historyLoaded = true;
+    renderHistoryTable();
+  } catch (e) {
+    console.error('Načtení historie selhalo:', e);
+    histMessage('Historii se nepodařilo načíst (' + esc(e.code || e.message || e) + ').');
+  }
+}
 
 function renderHistoryTable() {
   const tbody = document.getElementById('hist-tbody');
   if (!tbody) return;
-  tbody.innerHTML = ORDERS.map((o, i) => `
+  const cnt = s => ORDERS.filter(o => o.status === s).length;
+  document.getElementById('st-total').textContent = ORDERS.length;
+  document.getElementById('st-done').textContent = cnt('done');
+  document.getElementById('st-ship').textContent = cnt('ship');
+  document.getElementById('st-wait').textContent = cnt('wait');
+  if (!ORDERS.length) { histMessage('Zatím žádné objednávky.'); return; }
+  tbody.innerHTML = ORDERS.map((o, i) => {
+    const items = o.items || [];
+    const first = items[0] ? esc(items[0].name) : '—';
+    const more = items.length > 1 ? ` <span class="hist-more">+ ${items.length - 1} další</span>` : '';
+    const st = STATUS_LABEL[o.status] ? o.status : 'wait';
+    return `
     <tr onclick="openOrderModal(${i})">
-      <td>${o.id}</td><td>${o.date}</td><td>${o.product}</td><td class="code">${o.code}</td>
-      <td><span class="sbadge s-${o.status}">${STATUS_LABEL[o.status]}</span></td>
-    </tr>
-  `).join('');
+      <td>#${esc(o.orderNo)}</td><td>${fmtDate(o.dateObj)}</td><td>${first}${more}</td><td>${totalPairs(items)}</td>
+      <td><span class="sbadge s-${st}">${STATUS_LABEL[st]}</span></td>
+    </tr>`;
+  }).join('');
 }
-renderHistoryTable();
 
 function openOrderModal(i) {
   const o = ORDERS[i];
   if (!o) return;
-  document.getElementById('om-title').textContent = 'Objednávka ' + o.id;
-  document.getElementById('om-id').textContent = o.id;
-  document.getElementById('om-date').textContent = o.date;
-  document.getElementById('om-customer').textContent = o.customer;
-  document.getElementById('om-status').innerHTML = `<span class="sbadge s-${o.status}">${STATUS_LABEL[o.status]}</span>`;
-  document.getElementById('om-product').textContent = o.product;
-  document.getElementById('om-code').textContent = o.code;
-  document.getElementById('om-index').textContent = o.index;
-  document.getElementById('om-coat').textContent = o.coat;
-  document.getElementById('om-pairs').textContent = o.pairs + (o.pairs === 1 ? ' pár' : o.pairs < 5 ? ' páry' : ' párů');
-  document.getElementById('om-note').textContent = o.note || '—';
-  document.getElementById('om-rsph').textContent = o.r.sph;
-  document.getElementById('om-rcyl').textContent = o.r.cyl;
-  document.getElementById('om-rax').textContent = o.r.ax ? o.r.ax + '°' : '—';
-  document.getElementById('om-rdia').textContent = `Ø${o.r.dia} mm`;
-  document.getElementById('om-lsph').textContent = o.l.sph;
-  document.getElementById('om-lcyl').textContent = o.l.cyl;
-  document.getElementById('om-lax').textContent = o.l.ax ? o.l.ax + '°' : '—';
-  document.getElementById('om-ldia').textContent = `Ø${o.l.dia} mm`;
+  const st = STATUS_LABEL[o.status] ? o.status : 'wait';
+  document.getElementById('om-title').textContent = 'Objednávka #' + o.orderNo;
+  document.getElementById('om-id').textContent = '#' + o.orderNo;
+  document.getElementById('om-date').textContent = fmtDate(o.dateObj);
+  document.getElementById('om-rep').textContent = o.repName ? `${o.repName} (${o.repEmail})` : (o.repEmail || '—');
+  document.getElementById('om-status').innerHTML = `<span class="sbadge s-${st}">${STATUS_LABEL[st]}</span>`;
+  document.getElementById('om-items').innerHTML = (o.items || []).map(it => cartItemHtml(it, -1, true)).join('');
   document.getElementById('order-modal-backdrop').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
