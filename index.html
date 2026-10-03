@@ -508,10 +508,10 @@
                   <div class="mfr-desc">Skladové jednoohniskové čočky</div>
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
-                <div class="mfr-card disabled">
+                <div class="mfr-card" id="mfr-swiss" onclick="selMfr(this,'swiss')">
                   <div class="mfr-name">Optiswiss</div>
-                  <div class="mfr-desc">Skladové jednoohniskové čočky — zpracovávají se podklady</div>
-                  <span class="mfr-badge b-soon">Připravuje se</span>
+                  <div class="mfr-desc">Skladové jednoohniskové čočky</div>
+                  <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
               </div>
             </div>
@@ -575,7 +575,8 @@
                 <div class="rx-field"><label>Barva <span class="rx-count" id="color-cnt"></span></label><select id="color"></select></div>
                 <div class="rx-field"><label>Tónování <span class="rx-count" id="tint-cnt"></span></label><select id="tint"></select></div>
               </div>
-              <div class="rx-row" style="max-width:460px">
+              <div class="rx-row rx-2" style="max-width:620px">
+                <div class="rx-field"><label>Úprava <span class="rx-count" id="coating-cnt"></span></label><select id="coating"></select></div>
                 <div class="rx-field"><label>Poznámka</label><input type="text" id="note" placeholder="Volitelný komentář..."></div>
               </div>
             </div>
@@ -747,6 +748,15 @@ const MI_GRID = {"0":{"dias":[["70"],["65","70"],["65"],["60","65"],["60"]],"gri
 const RED_PRODUCTS = [{"id":0,"family":"Org","index":"1,5","desc":"","title":"Red Org 1,5","sphMin":-6.0,"sphMax":6.0,"cylMax":3.0,"code":"093.819"},{"id":1,"family":"Org","index":"1,5","desc":"Hard","title":"Red Org 1,5 Hard","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.818"},{"id":2,"family":"Org","index":"1,5","desc":"SHC","title":"Red Org 1,5 SHC","sphMin":-6.0,"sphMax":6.0,"cylMax":3.0,"code":"003.051"},{"id":3,"family":"Org","index":"1,5","desc":"Mini SHC","title":"Red Org 1,5 Mini SHC","sphMin":0.0,"sphMax":8.0,"cylMax":3.0,"code":"003.052"},{"id":4,"family":"Org","index":"1,5","desc":"Maxi Kids","title":"Red Org 1,5 Maxi Kids","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.826"},{"id":5,"family":"Org","index":"1,6","desc":"SHC","title":"Red Org 1,6 SHC","sphMin":-10.0,"sphMax":6.0,"cylMax":2.0,"code":"093.806"},{"id":6,"family":"Org","index":"1,6","desc":"AS SHC","title":"Red Org 1,6 AS SHC","sphMin":-11.0,"sphMax":6.0,"cylMax":3.0,"code":"093.804"},{"id":7,"family":"Org","index":"1,67","desc":"SHC","title":"Red Org 1,67 SHC","sphMin":-8.0,"sphMax":6.0,"cylMax":3.0,"code":"093.803"},{"id":8,"family":"Org","index":"1,67","desc":"AS SHC","title":"Red Org 1,67 AS SHC","sphMin":-12.0,"sphMax":6.0,"cylMax":4.0,"code":"093.802"},{"id":9,"family":"Org","index":"1,5","desc":"UltimaS","title":"Red Org 1,5 UltimaS","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.811"},{"id":10,"family":"Org","index":"1,6","desc":"UltimaS","title":"Red Org 1,6 UltimaS","sphMin":-10.0,"sphMax":6.0,"cylMax":2.0,"code":"093.805"},{"id":11,"family":"Org","index":"1,67","desc":"AS UltimaS","title":"Red Org 1,67 AS UltimaS","sphMin":-12.0,"sphMax":6.0,"cylMax":2.0,"code":"093.801"},{"id":12,"family":"Org","index":"1,74","desc":"AS UltimaS","title":"Red Org 1,74 AS UltimaS","sphMin":-14.0,"sphMax":-3.0,"cylMax":4.0,"code":"093.800"},{"id":13,"family":"Org","index":"1,5","desc":"BLC UltimaS","title":"Red Org 1,5 BLC UltimaS","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"090.710"},{"id":14,"family":"Org","index":"1,6","desc":"BLC UltimaS","title":"Red Org 1,6 BLC UltimaS","sphMin":-10.0,"sphMax":6.0,"cylMax":2.0,"code":"093.833"},{"id":15,"family":"Org","index":"1,67","desc":"AS BLC UltimaS","title":"Red Org 1,67 AS BLC UltimaS","sphMin":-12.0,"sphMax":6.0,"cylMax":2.0,"code":"093.834"},{"id":16,"family":"Org","index":"1,5","desc":"SHC Transitions","title":"Red Org 1,5 SHC Transitions","sphMin":-4.0,"sphMax":4.0,"cylMax":2.0,"code":"098.165/098.166"},{"id":17,"family":"Org","index":"1,5","desc":"SHC Transitions XTRActive","title":"Red Org 1,5 SHC Transitions XTRActive","sphMin":-4.0,"sphMax":4.0,"cylMax":2.0,"code":"093.817"},{"id":18,"family":"Org","index":"1,6","desc":"UltimaS Transitions","title":"Red Org 1,6 UltimaS Transitions","sphMin":-6.0,"sphMax":4.0,"cylMax":2.0,"code":"098.169/098.170"},{"id":19,"family":"Tri","index":"1,53","desc":"SHC","title":"Red 1,53 Tri SHC","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.820"},{"id":20,"family":"Min","index":"1,5","desc":"","title":"Red Min 1,5","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.825"},{"id":21,"family":"Min","index":"1,5","desc":"Photo SAR","title":"Red Min 1,5 Photo SAR","sphMin":-4.0,"sphMax":4.0,"cylMax":2.0,"code":"093.824"},{"id":22,"family":"Min","index":"1,5","desc":"SAR","title":"Red Min 1,5 SAR","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.823"},{"id":23,"family":"Min","index":"1,6","desc":"SAR","title":"Red Min 1,6 SAR","sphMin":-4.0,"sphMax":6.0,"cylMax":2.0,"code":"093.822"},{"id":24,"family":"Sun","index":"1,5","desc":"","title":"Red Sun Org 1,5","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.830"},{"id":25,"family":"Sun","index":"1,5","desc":"Sunset","title":"Red Sun Org 1,5 Sunset","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.829"},{"id":26,"family":"Sun","index":"1,6","desc":"Sunset","title":"Red Sun Org 1,6 Sunset","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"code":"093.835"}];
 const RED_GRID = {"0":{"dias":[["65"],["65","70"],["70"]],"grid":[[0.0,[[6.0,4.0,0],[3.75,0.25,1],[0.0,-6.0,2]]],[0.25,[[5.75,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[0.5,[[5.5,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[0.75,[[5.25,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.0,[[5.0,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.25,[[4.75,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.5,[[4.5,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.75,[[4.25,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[2.0,[[4.0,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[2.25,[[3.75,2.0,0],[1.75,0.0,1]]],[2.5,[[3.5,1.75,0],[1.5,0.0,1]]],[2.75,[[3.25,1.5,0],[1.25,0.0,1]]],[3.0,[[3.0,1.25,0],[1.0,0.0,1]]]]},"1":{"dias":[["55","60","65"],["55","60","65","70"],["70"]],"grid":[[0.0,[[6.0,4.25,0],[4.0,0.25,1],[0.0,-6.0,2]]],[0.25,[[5.75,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[0.5,[[5.5,3.75,0],[3.5,0.0,1],[-0.25,-6.0,2]]],[0.75,[[5.25,3.5,0],[3.25,0.0,1],[-0.25,-6.0,2]]],[1.0,[[5.0,3.25,0],[3.0,0.0,1],[-0.25,-6.0,2]]],[1.25,[[4.75,3.0,0],[2.75,0.0,1],[-0.25,-6.0,2]]],[1.5,[[4.5,2.75,0],[2.5,0.0,1],[-0.25,-6.0,2]]],[1.75,[[4.25,2.5,0],[2.25,0.0,1],[-0.25,-6.0,2]]],[2.0,[[4.0,2.25,0],[2.0,0.0,1],[-0.25,-6.0,2]]]]},"2":{"dias":[["65","70"],["65","70","75"],["70","75"],["70"]],"grid":[[0.0,[[6.0,4.25,0],[4.0,0.25,1],[0.0,-5.0,2],[-5.25,-6.0,3]]],[0.25,[[5.75,4.0,0],[3.75,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[0.5,[[5.5,3.75,0],[3.5,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[0.75,[[5.25,3.5,0],[3.25,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[1.0,[[5.0,3.25,0],[3.0,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[1.25,[[4.75,3.0,0],[2.75,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[1.5,[[4.5,2.75,0],[2.5,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[1.75,[[4.25,2.5,0],[2.25,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[2.0,[[4.0,2.25,0],[2.0,0.0,1],[-0.25,-5.0,2],[-5.25,-6.0,3]]],[2.25,[[4.0,0.0,0],[-0.25,-6.0,3]]],[2.5,[[4.0,0.0,0],[-0.25,-6.0,3]]],[2.75,[[4.0,0.0,0],[-0.25,-6.0,3]]],[3.0,[[4.0,0.0,0],[-0.25,-6.0,3]]]]},"3":{"dias":[["50","55","60"],["55","60"]],"grid":[[0.0,[[8.0,0.0,0]]],[0.25,[[7.75,0.0,0]]],[0.5,[[7.5,0.0,0]]],[0.75,[[7.25,0.0,0]]],[1.0,[[7.0,0.0,0]]],[1.25,[[6.75,0.0,0]]],[1.5,[[6.5,0.0,0]]],[1.75,[[6.25,0.0,0]]],[2.0,[[6.0,0.0,0]]],[2.25,[[5.75,0.0,1]]],[2.5,[[5.5,0.0,1]]],[2.75,[[5.25,0.0,1]]],[3.0,[[5.0,0.0,1]]]]},"4":{"dias":[["50","55","60","65"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1]]],[0.25,[[5.75,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.5,0.0,0],[-0.25,-6.0,1]]],[0.75,[[5.25,0.0,0],[-0.25,-6.0,1]]],[1.0,[[5.0,0.0,0],[-0.25,-6.0,1]]],[1.25,[[4.75,0.0,0],[-0.25,-6.0,1]]],[1.5,[[4.5,0.0,0],[-0.25,-6.0,1]]],[1.75,[[4.25,0.0,0],[-0.25,-6.0,1]]],[2.0,[[4.0,0.0,0],[-0.25,-6.0,1]]]]},"5":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1],[-6.25,-9.0,2],[-9.5,-9.5,2],[-10.0,-10.0,2]]],[0.25,[[5.75,0.0,0],[-0.25,-6.25,1],[-6.5,-8.25,2]]],[0.5,[[5.5,-0.25,0],[-0.5,-6.5,1],[-6.75,-8.5,2]]],[0.75,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-8.75,2]]],[1.0,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-9.0,2]]],[1.25,[[4.75,-1.0,0],[-1.25,-7.25,1],[-7.5,-9.25,2]]],[1.5,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-9.5,2]]],[1.75,[[4.25,-1.5,0],[-1.75,-7.75,1],[-8.0,-9.75,2]]],[2.0,[[4.0,-1.75,0],[-2.0,-8.0,1],[-8.25,-10.0,2]]]]},"6":{"dias":[["60","65"],["75"],["65"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1],[-6.25,-10.0,3]]],[0.25,[[5.75,0.0,0],[-0.25,-6.25,1],[-6.5,-10.25,3]]],[0.5,[[5.5,0.0,0],[-0.25,-0.25,2],[-0.5,-6.5,1],[-6.75,-10.5,3]]],[0.75,[[5.25,0.0,0],[-0.25,-0.5,2],[-0.75,-6.75,1],[-7.0,-10.75,3]]],[1.0,[[5.0,0.0,0],[-0.25,-0.75,2],[-1.0,-7.0,1],[-7.25,-11.0,3]]],[1.25,[[4.75,0.0,0],[-0.25,-1.0,2],[-1.25,-7.25,1],[-7.5,-9.25,3]]],[1.5,[[4.5,0.0,0],[-0.25,-1.25,2],[-1.5,-7.5,1],[-7.75,-9.5,3]]],[1.75,[[4.25,0.0,0],[-0.25,-1.5,2],[-1.75,-7.75,1],[-8.0,-9.75,3]]],[2.0,[[4.0,0.0,0],[-0.25,-1.75,2],[-2.0,-8.0,1],[-8.25,-10.0,3]]],[2.25,[[-2.25,-8.25,1],[-8.5,-10.25,3]]],[2.5,[[-2.5,-8.5,1],[-8.75,-10.5,3]]],[2.75,[[-2.75,-8.75,1],[-9.0,-10.75,3]]],[3.0,[[-3.0,-9.0,1],[-9.25,-11.0,3]]]]},"7":{"dias":[["65"],["70"],["75"]],"grid":[[0.0,[[6.0,2.25,0],[2.0,0.25,1],[0.0,-7.0,2],[-7.25,-8.0,1]]],[0.25,[[5.75,2.0,0],[1.75,0.0,1],[-0.25,-7.0,2],[-7.25,-8.0,1]]],[0.5,[[5.5,1.75,0],[1.5,-0.25,1],[-0.5,-7.25,2],[-7.5,-8.0,1]]],[0.75,[[5.25,1.5,0],[1.25,-0.5,1],[-0.75,-7.25,2],[-7.5,-8.0,1]]],[1.0,[[5.0,1.25,0],[1.0,-0.75,1],[-1.0,-7.5,2],[-7.75,-8.0,1]]],[1.25,[[4.75,1.0,0],[0.75,-1.0,1],[-1.25,-7.5,2],[-7.75,-8.0,1]]],[1.5,[[4.5,0.75,0],[0.5,-1.25,1],[-1.5,-7.75,2],[-8.0,-8.0,1]]],[1.75,[[4.25,0.5,0],[0.25,-1.5,1],[-1.75,-7.75,2],[-8.0,-8.0,1]]],[2.0,[[4.0,0.25,0],[0.0,-1.75,1],[-2.0,-8.0,2]]],[2.25,[[3.75,0.0,0],[-0.25,-2.0,1],[-2.25,-8.0,2]]],[2.5,[[3.5,-0.25,0],[-0.5,-2.25,1],[-2.5,-8.0,2]]],[2.75,[[3.25,-0.5,0],[-0.75,-2.5,1],[-2.75,-8.0,2]]],[3.0,[[3.0,-0.75,0],[-1.0,-2.75,1],[-3.0,-8.0,2]]]]},"8":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.0,0],[-2.0,-6.0,1],[-6.25,-10.0,2]]],[0.25,[[5.75,0.0,0],[-2.25,-6.25,1],[-6.5,-10.25,2]]],[0.5,[[5.5,0.0,0],[-2.5,-6.5,1],[-6.75,-10.5,2]]],[0.75,[[5.25,0.0,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[1.0,[[5.0,0.0,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[1.25,[[4.75,0.0,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[1.5,[[4.5,0.0,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.75,[[4.25,0.0,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[2.0,[[4.0,0.0,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]],[2.25,[[-4.25,-8.25,1],[-8.5,-10.25,2]]],[2.5,[[-4.5,-8.5,1],[-8.75,-10.5,2]]],[2.75,[[-4.75,-8.75,1],[-9.0,-10.75,2]]],[3.0,[[-5.0,-9.0,1],[-9.25,-11.0,2]]],[3.25,[[-5.25,-9.25,1],[-9.5,-11.25,2]]],[3.5,[[-5.5,-9.5,1],[-9.75,-11.5,2]]],[3.75,[[-5.75,-9.75,1],[-10.0,-11.75,2]]],[4.0,[[-6.0,-10.0,1],[-10.25,-12.0,2]]]]},"9":{"dias":[["65"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1]]],[0.25,[[5.75,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.5,-0.25,0],[-0.5,-6.0,1]]],[0.75,[[5.25,-0.5,0],[-0.75,-6.0,1]]],[1.0,[[5.0,-0.75,0],[-1.0,-6.0,1]]],[1.25,[[4.75,-1.0,0],[-1.25,-6.0,1]]],[1.5,[[4.5,-1.25,0],[-1.5,-6.0,1]]],[1.75,[[4.25,-1.5,0],[-1.75,-6.0,1]]],[2.0,[[4.0,-1.75,0],[-2.0,-6.0,1]]]]},"10":{"dias":[["60","65"],["60","65","70"],["75"],["65"],["70"]],"grid":[[0.0,[[6.0,4.25,0],[4.0,0.25,1],[0.0,-6.0,2],[-6.25,-9.0,4],[-9.5,-9.5,4],[-10.0,-10.0,4]]],[0.25,[[5.75,4.0,0],[3.75,0.0,1],[-0.25,-6.25,2],[-6.5,-8.25,4]]],[0.5,[[5.5,3.75,0],[3.5,0.0,1],[-0.25,-0.25,3],[-0.5,-6.5,2],[-6.75,-8.5,4]]],[0.75,[[5.25,3.5,0],[3.25,0.0,1],[-0.25,-0.5,3],[-0.75,-6.75,2],[-7.0,-8.75,4]]],[1.0,[[5.0,3.25,0],[3.0,0.0,1],[-0.25,-0.75,3],[-1.0,-7.0,2],[-7.25,-9.0,4]]],[1.25,[[4.75,3.0,0],[2.75,0.0,1],[-0.25,-1.0,3],[-1.25,-7.25,2],[-7.5,-9.25,4]]],[1.5,[[4.5,2.75,0],[2.5,0.0,1],[-0.25,-1.25,3],[-1.5,-7.5,2],[-7.75,-9.5,4]]],[1.75,[[4.25,2.5,0],[2.25,0.0,1],[-0.25,-1.5,3],[-1.75,-7.75,2],[-8.0,-9.75,4]]],[2.0,[[4.0,2.25,0],[2.0,0.0,1],[-0.25,-1.75,3],[-2.0,-8.0,2],[-8.25,-10.0,4]]]]},"11":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[-2.0,-6.0,1],[-6.25,-10.0,2]]],[0.25,[[5.75,0.0,0],[-2.25,-6.25,1],[-6.5,-10.25,2]]],[0.5,[[5.5,0.0,0],[-2.5,-6.5,1],[-6.75,-10.5,2]]],[0.75,[[5.25,0.0,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[1.0,[[5.0,0.0,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[1.25,[[4.75,0.0,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[1.5,[[4.5,0.0,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.75,[[4.25,0.0,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[2.0,[[4.0,0.0,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]]]},"12":{"dias":[["75"],["70"]],"grid":[[0.0,[[-3.0,-6.0,0],[-6.25,-10.0,1],[-10.5,-10.5,1],[-11.0,-11.0,1],[-11.5,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1],[-14.0,-14.0,1]]],[0.25,[[-3.25,-6.25,0],[-6.5,-10.25,1],[-10.75,-10.75,1],[-11.25,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1]]],[0.5,[[-3.5,-6.5,0],[-6.75,-10.5,1],[-11.0,-11.0,1],[-11.5,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1]]],[0.75,[[-3.75,-6.75,0],[-7.0,-10.75,1],[-11.25,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1]]],[1.0,[[-4.0,-7.0,0],[-7.25,-11.0,1],[-11.5,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1]]],[1.25,[[-4.25,-7.25,0],[-7.5,-11.25,1],[-11.75,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1]]],[1.5,[[-4.5,-7.5,0],[-7.75,-11.5,1],[-12.0,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1]]],[1.75,[[-4.75,-7.75,0],[-8.0,-11.75,1],[-12.25,-12.25,1],[-12.75,-12.75,1],[-13.25,-13.25,1],[-13.75,-13.75,1]]],[2.0,[[-5.0,-8.0,0],[-8.25,-12.0,1],[-12.5,-12.5,1],[-13.0,-13.0,1],[-13.5,-13.5,1],[-14.0,-14.0,1]]],[2.25,[[-5.25,-8.25,0],[-8.5,-10.25,1]]],[2.5,[[-5.5,-8.5,0],[-8.75,-10.5,1]]],[2.75,[[-5.75,-8.75,0],[-9.0,-10.75,1]]],[3.0,[[-6.0,-9.0,0],[-9.25,-11.0,1]]],[3.25,[[-6.25,-9.25,0],[-9.5,-11.25,1]]],[3.5,[[-6.5,-9.5,0],[-9.75,-11.5,1]]],[3.75,[[-6.75,-9.75,0],[-10.0,-11.75,1]]],[4.0,[[-7.0,-10.0,0],[-10.25,-12.0,1]]]]},"13":{"dias":[["65","70"],["70"]],"grid":[[0.0,[[6.0,0.0,0],[-0.25,-6.0,1]]],[0.25,[[5.75,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.5,0.0,0],[-0.25,-6.0,1]]],[0.75,[[5.25,0.0,0],[-0.25,-6.0,1]]],[1.0,[[5.0,0.0,0],[-0.25,-6.0,1]]],[1.25,[[4.75,0.0,0],[-0.25,-6.0,1]]],[1.5,[[4.5,0.0,0],[-0.25,-6.0,1]]],[1.75,[[4.25,0.0,0],[-0.25,-6.0,1]]],[2.0,[[4.0,0.0,0],[-0.25,-6.0,1]]]]},"14":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1],[-6.25,-9.0,2],[-9.5,-9.5,2],[-10.0,-10.0,2]]],[0.25,[[5.75,0.0,0],[-0.25,-6.25,1],[-6.5,-8.25,2]]],[0.5,[[5.5,-0.25,0],[-0.5,-6.5,1],[-6.75,-8.5,2]]],[0.75,[[5.25,-0.5,0],[-0.75,-6.75,1],[-7.0,-8.75,2]]],[1.0,[[5.0,-0.75,0],[-1.0,-7.0,1],[-7.25,-9.0,2]]],[1.25,[[4.75,-1.0,0],[-1.25,-7.25,1],[-7.5,-9.25,2]]],[1.5,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-9.5,2]]],[1.75,[[4.25,-1.5,0],[-1.75,-7.75,1],[-8.0,-9.75,2]]],[2.0,[[4.0,-1.75,0],[-2.0,-8.0,1],[-8.25,-10.0,2]]]]},"15":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[-2.0,-6.0,1],[-6.25,-10.0,2]]],[0.25,[[5.75,0.0,0],[-2.25,-6.25,1],[-6.5,-10.25,2]]],[0.5,[[5.5,0.0,0],[-2.5,-6.5,1],[-6.75,-10.5,2]]],[0.75,[[5.25,0.0,0],[-2.75,-6.75,1],[-7.0,-10.75,2]]],[1.0,[[5.0,0.0,0],[-3.0,-7.0,1],[-7.25,-11.0,2]]],[1.25,[[4.75,0.0,0],[-3.25,-7.25,1],[-7.5,-11.25,2]]],[1.5,[[4.5,0.0,0],[-3.5,-7.5,1],[-7.75,-11.5,2]]],[1.75,[[4.25,0.0,0],[-3.75,-7.75,1],[-8.0,-11.75,2]]],[2.0,[[4.0,0.0,0],[-4.0,-8.0,1],[-8.25,-12.0,2]]]]},"16":{"dias":[["65"],["70"]],"grid":[[0.0,[[4.0,0.25,0],[0.0,-4.0,1]]],[0.25,[[3.75,0.25,0],[0.0,-4.0,1]]],[0.5,[[3.5,0.25,0],[0.0,-4.0,1]]],[0.75,[[3.25,0.25,0],[0.0,-4.0,1]]],[1.0,[[3.0,0.25,0],[0.0,-4.0,1]]],[1.25,[[2.75,0.25,0],[0.0,-4.0,1]]],[1.5,[[2.5,0.25,0],[0.0,-4.0,1]]],[1.75,[[2.25,0.25,0],[0.0,-4.0,1]]],[2.0,[[2.0,0.25,0],[0.0,-4.0,1]]]]},"17":{"dias":[["65"],["70"]],"grid":[[0.0,[[4.0,0.0,0],[-0.25,-4.0,1]]],[0.25,[[3.75,0.0,0],[-0.25,-4.0,1]]],[0.5,[[3.5,0.0,0],[-0.25,-4.0,1]]],[0.75,[[3.25,0.0,0],[-0.25,-4.0,1]]],[1.0,[[3.0,0.0,0],[-0.25,-4.0,1]]],[1.25,[[2.75,0.0,0],[-0.25,-4.0,1]]],[1.5,[[2.5,0.0,0],[-0.25,-4.0,1]]],[1.75,[[2.25,0.0,0],[-0.25,-4.0,1]]],[2.0,[[2.0,0.0,0],[-0.25,-4.0,1]]]]},"18":{"dias":[["65"],["75"]],"grid":[[0.0,[[4.0,0.25,0],[0.0,-6.0,1]]],[0.25,[[3.75,0.0,0],[-0.25,-6.0,1]]],[0.5,[[3.5,-0.25,0],[-0.5,-6.0,1]]],[0.75,[[3.25,-0.5,0],[-0.75,-6.0,1]]],[1.0,[[3.0,-0.75,0],[-1.0,-6.0,1]]],[1.25,[[2.75,-1.0,0],[-1.25,-6.0,1]]],[1.5,[[2.5,-1.25,0],[-1.5,-6.0,1]]],[1.75,[[2.25,-1.5,0],[-1.75,-6.0,1]]],[2.0,[[2.0,-1.75,0],[-2.0,-6.0,1]]]]},"19":{"dias":[["65"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1]]],[0.25,[[5.75,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.5,-0.25,0],[-0.5,-6.0,1]]],[0.75,[[5.25,-0.5,0],[-0.75,-6.0,1]]],[1.0,[[5.0,-0.75,0],[-1.0,-6.0,1]]],[1.25,[[4.75,-1.0,0],[-1.25,-6.0,1]]],[1.5,[[4.5,-1.25,0],[-1.5,-6.0,1]]],[1.75,[[4.25,-1.5,0],[-1.75,-6.0,1]]],[2.0,[[4.0,-1.75,0],[-2.0,-6.0,1]]]]},"20":{"dias":[["60","65"],["65","70"],["70"]],"grid":[[0.0,[[6.0,4.25,0],[4.0,0.25,1],[0.0,-6.0,2]]],[0.25,[[5.75,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[0.5,[[5.5,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[0.75,[[5.25,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.0,[[5.0,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.25,[[4.75,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.5,[[4.5,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[1.75,[[4.25,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]],[2.0,[[4.0,4.0,0],[3.75,0.0,1],[-0.25,-6.0,2]]]]},"21":{"dias":[["65"],["70"]],"grid":[[0.0,[[4.0,0.25,0],[0.0,-4.0,1]]],[0.25,[[4.0,0.0,0],[-0.25,-4.0,1]]],[0.5,[[4.0,0.0,0],[-0.25,-4.0,1]]],[0.75,[[4.0,0.0,0],[-0.25,-4.0,1]]],[1.0,[[4.0,0.0,0],[-0.25,-4.0,1]]],[1.25,[[4.0,0.0,0],[-0.25,-4.0,1]]],[1.5,[[4.0,0.0,0],[-0.25,-4.0,1]]],[1.75,[[4.0,0.0,0],[-0.25,-4.0,1]]],[2.0,[[4.0,0.0,0],[-0.25,-4.0,1]]]]},"22":{"dias":[["65"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-6.0,1]]],[0.25,[[5.75,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.5,0.0,0],[-0.25,-6.0,1]]],[0.75,[[5.25,0.0,0],[-0.25,-6.0,1]]],[1.0,[[5.0,0.0,0],[-0.25,-6.0,1]]],[1.25,[[4.75,0.0,0],[-0.25,-6.0,1]]],[1.5,[[4.5,0.0,0],[-0.25,-6.0,1]]],[1.75,[[4.25,0.0,0],[-0.25,-6.0,1]]],[2.0,[[4.0,0.0,0],[-0.25,-6.0,1]]]]},"23":{"dias":[["65"],["70"]],"grid":[[0.0,[[6.0,0.25,0],[0.0,-4.0,1]]],[0.25,[[5.75,0.0,0],[-0.25,-4.0,1]]],[0.5,[[5.5,0.0,0],[-0.25,-4.0,1]]],[0.75,[[5.25,0.0,0],[-0.25,-4.0,1]]],[1.0,[[5.0,0.0,0],[-0.25,-4.0,1]]],[1.25,[[4.75,0.0,0],[-0.25,-4.0,1]]],[1.5,[[4.5,0.0,0],[-0.25,-4.0,1]]],[1.75,[[4.25,0.0,0],[-0.25,-4.0,1]]],[2.0,[[4.0,0.0,0],[-0.25,-4.0,1]]]]},"24":{"dias":[["70","75"],["65","70","75"],["65","70"]],"grid":[[0.0,[[6.0,4.25,2],[4.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,4.0,2],[3.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[5.5,4.0,2],[3.5,0.0,1],[-0.25,-6.0,0]]],[0.75,[[5.25,4.0,2],[3.25,0.0,1],[-0.25,-6.0,0]]],[1.0,[[5.0,4.0,2],[3.0,0.0,1],[-0.25,-6.0,0]]],[1.25,[[4.75,4.0,2],[2.75,0.0,1],[-0.25,-6.0,0]]],[1.5,[[4.5,4.0,2],[2.5,0.0,1],[-0.25,-6.0,0]]],[1.75,[[4.25,4.0,2],[2.25,0.0,1],[-0.25,-6.0,0]]],[2.0,[[4.0,4.0,2],[2.0,0.0,1],[-0.25,-6.0,0]]]]},"25":{"dias":[["70","75"],["65","70","75"],["65","70"]],"grid":[[0.0,[[6.0,4.25,2],[4.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,4.0,2],[3.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[5.5,4.0,2],[3.5,0.0,1],[-0.25,-6.0,0]]],[0.75,[[5.25,4.0,2],[3.25,0.0,1],[-0.25,-6.0,0]]],[1.0,[[5.0,4.0,2],[3.0,0.0,1],[-0.25,-6.0,0]]],[1.25,[[4.75,4.0,2],[2.75,0.0,1],[-0.25,-6.0,0]]],[1.5,[[4.5,4.0,2],[2.5,0.0,1],[-0.25,-6.0,0]]],[1.75,[[4.25,4.0,2],[2.25,0.0,1],[-0.25,-6.0,0]]],[2.0,[[4.0,4.0,2],[2.0,0.0,1],[-0.25,-6.0,0]]]]},"26":{"dias":[["75"],["65"]],"grid":[[0.0,[[6.0,0.25,1],[0.0,-6.0,0]]],[0.25,[[5.75,0.0,1],[-0.25,-6.0,0]]],[0.5,[[5.5,-0.25,1],[-0.5,-6.0,0]]],[0.75,[[5.25,-0.5,1],[-0.75,-6.0,0]]],[1.0,[[5.0,-0.75,1],[-1.0,-6.0,0]]],[1.25,[[4.75,-1.0,1],[-1.25,-6.0,0]]],[1.5,[[4.5,-1.25,1],[-1.5,-6.0,0]]],[1.75,[[4.25,-1.5,1],[-1.75,-6.0,0]]],[2.0,[[4.0,-1.75,1],[-2.0,-6.0,0]]]]}};
 
+/* ── OPTISWISS: data digitalizovaná 1:1 z rozsahy_SWISS_sklad.pdf. 6 skupin (= 6 stránek katalogu,
+   "STOCK ORGA 150/150 B-UV/160/160 B-UV/167 AS/167 AS B-UV"), Sph×Cyl → Ø stejná struktura jako
+   RED_GRID/MI_GRID. Na rozdíl od RED/MI se tu povrchová úprava (coatings: desc+code, 5 na skupinu)
+   nevybírá v tabulce produktů jako samostatný řádek — rozsah Sph/Cyl i tabulka Ø jsou pro všech 5
+   úprav v jedné skupině identické, takže úprava/kód se vybírá až v kroku Parametry Rx (pole
+   „Úprava", obdoba Barva/Tónování u RED Sun — viz coatingsFor()/setupCoatingSelect() níže). ── */
+const SWISS_GROUPS = [{"id":0,"group":"ORGA 150","pageName":"STOCK ORGA 150","index":"1,50","sphMin":-6.0,"sphMax":6.0,"cylMax":3.0,"coatings":[{"desc":"Blue-CXUV","code":"809OLG"},{"desc":"Dual+UV","code":"A0GOLG"},{"desc":"Dual+UV CLEEN","code":"M8UOLG"},{"desc":"O+","code":"A7NOLG"},{"desc":"O+ CLEEN","code":"M9AOLG"}]},{"id":1,"group":"ORGA 150 B-UV","pageName":"STOCK ORGA 150 B-UV","index":"1,50 B-UV","sphMin":-6.0,"sphMax":6.0,"cylMax":3.0,"coatings":[{"desc":"Blue-CXUV","code":"H8COLG"},{"desc":"Dual+UV","code":"H7ZOLG"},{"desc":"Dual+UV CLEEN","code":"N1AOLG"},{"desc":"O+","code":"H4ZOLG"},{"desc":"O+ CLEEN","code":"N1BOLG"}]},{"id":2,"group":"ORGA 160","pageName":"STOCK ORGA 160","index":"1,60","sphMin":-6.0,"sphMax":6.0,"cylMax":3.0,"coatings":[{"desc":"Blue-CXUV","code":"810OLG"},{"desc":"Dual+UV","code":"A0HOLG"},{"desc":"Dual+UV CLEEN","code":"M8WOLG"},{"desc":"O+","code":"A7OOLG"},{"desc":"O+ CLEEN","code":"M9COLG"}]},{"id":3,"group":"ORGA 160 B-UV","pageName":"STOCK ORGA 160 B-UV","index":"1,60 B-UV","sphMin":-6.0,"sphMax":6.0,"cylMax":2.0,"coatings":[{"desc":"Blue-CXUV","code":"H8DOLG"},{"desc":"Dual+UV","code":"H8AOLG"},{"desc":"Dual+UV CLEEN","code":"M8XOLG"},{"desc":"O+","code":"H5AOLG"},{"desc":"O+ CLEEN","code":"M9DOLG"}]},{"id":4,"group":"ORGA 167 AS","pageName":"STOCK ORGA 167 AS","index":"1,67 AS","sphMin":-8.0,"sphMax":6.0,"cylMax":3.0,"coatings":[{"desc":"Blue-CXUV","code":"811OLG"},{"desc":"Dual+UV","code":"A0IOLG"},{"desc":"Dual+UV CLEEN","code":"M8YOLG"},{"desc":"O+","code":"A7POLG"},{"desc":"O+ CLEEN","code":"M9EOLG"}]},{"id":5,"group":"ORGA 167 AS B-UV","pageName":"STOCK ORGA 167 AS B-UV","index":"1,67 AS B-UV","sphMin":-8.0,"sphMax":6.0,"cylMax":2.0,"coatings":[{"desc":"Blue-CXUV","code":"H8EOLG"},{"desc":"Dual+UV","code":"H8BOLG"},{"desc":"Dual+UV CLEEN","code":"M8ZOLG"},{"desc":"O+","code":"H5BOLG"},{"desc":"O+ CLEEN","code":"M9FOLG"}]}];
+const SWISS_GRID = {"0":{"dias":[["60","65"],["60","65","70","75"],["70","75"],["70"],["60","65","70"],["65","70","75"],["65"]],"grid":[[0.0,[[6.0,4.5,0],[4.0,0.5,1],[0.0,-4.0,2],[-4.25,-6.0,3]]],[0.25,[[6.0,4.5,0],[4.0,4.25,4],[4.0,0.5,1],[0.0,0.0,5],[-0.25,-4.25,2],[-4.5,-6.0,3]]],[0.5,[[5.75,4.5,0],[4.0,4.0,4],[3.75,0.5,1],[0.0,-0.25,5],[-0.5,-4.5,2],[-4.75,-6.0,3]]],[0.75,[[5.5,4.5,0],[4.0,3.75,4],[3.5,0.5,1],[0.0,-0.5,5],[-0.75,-4.75,2],[-5.0,-6.0,3]]],[1.0,[[5.25,4.5,0],[4.0,3.5,4],[3.0,0.5,1],[0.0,-0.5,5],[-0.75,-5.0,2],[-5.25,-6.0,3]]],[1.25,[[5.0,4.5,0],[4.0,3.0,4],[2.75,0.5,1],[0.0,-0.75,5],[-1.25,-5.25,2],[-5.5,-6.0,3]]],[1.5,[[4.75,4.5,0],[4.0,3.0,4],[2.75,0.5,1],[0.0,-1.25,5],[-1.5,-5.5,2],[-5.75,-6.0,3]]],[1.75,[[4.5,4.5,0],[4.0,2.75,4],[2.5,0.5,1],[0.0,-1.5,5],[-1.75,-5.75,2],[-6.0,-6.0,3]]],[2.0,[[4.0,2.5,4],[2.0,0.5,1],[0.0,-1.75,5],[-2.0,-6.0,2]]],[2.25,[[4.0,-6.0,6]]],[2.5,[[3.75,-6.0,6]]],[2.75,[[3.5,-6.0,6]]],[3.0,[[3.0,-6.0,6]]]]},"1":{"dias":[["65"],["65","70"],["70"]],"grid":[[0.0,[[6.0,4.5,0],[4.0,0.5,1],[0.0,-6.0,2]]],[0.25,[[6.0,4.5,0],[4.0,0.0,1],[-0.25,-6.0,2]]],[0.5,[[5.75,4.5,0],[4.0,-0.25,1],[-0.5,-6.0,2]]],[0.75,[[5.5,4.5,0],[4.0,-0.5,1],[-0.75,-6.0,2]]],[1.0,[[5.25,4.5,0],[4.0,-0.5,1],[-0.75,-6.0,2]]],[1.25,[[5.0,4.5,0],[4.0,-0.75,1],[-1.25,-6.0,2]]],[1.5,[[4.75,4.5,0],[4.0,-1.25,1],[-1.5,-6.0,2]]],[1.75,[[4.5,4.5,0],[4.0,-1.5,1],[-1.75,-6.0,2]]],[2.0,[[4.0,-1.75,1],[-1.75,-6.0,2]]],[2.25,[[1.75,-6.0,2]]],[2.5,[[1.5,-6.0,2]]],[2.75,[[1.5,-6.0,2]]],[3.0,[[1.0,-6.0,2]]]]},"2":{"dias":[["65"],["75"]],"grid":[[0.0,[[6.0,0.5,0],[0.0,-6.0,1]]],[0.25,[[6.0,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.75,-0.25,0],[-0.5,-6.0,1]]],[0.75,[[5.5,-0.5,0],[-0.75,-6.0,1]]],[1.0,[[5.25,-0.5,0],[-0.75,-6.0,1]]],[1.25,[[5.0,-0.75,0],[-1.25,-6.0,1]]],[1.5,[[4.75,-1.25,0],[-1.5,-6.0,1]]],[1.75,[[4.5,-1.5,0],[-1.75,-6.0,1]]],[2.0,[[4.0,-1.75,0],[-2.0,-6.0,1]]],[2.25,[[4.0,-1.75,0],[-2.25,-6.0,1]]],[2.5,[[3.75,-2.25,0],[-2.5,-6.0,1]]],[2.75,[[3.5,-2.5,0],[-2.75,-6.0,1]]],[3.0,[[3.0,-2.75,0],[-3.0,-6.0,1]]]]},"3":{"dias":[["65"],["75"]],"grid":[[0.0,[[6.0,0.5,0],[0.0,-6.0,1]]],[0.25,[[6.0,0.0,0],[-0.25,-6.0,1]]],[0.5,[[5.75,-0.25,0],[-0.5,-6.0,1]]],[0.75,[[5.5,-0.5,0],[-0.75,-6.0,1]]],[1.0,[[5.25,-0.5,0],[-0.75,-6.0,1]]],[1.25,[[5.0,-0.75,0],[-1.25,-6.0,1]]],[1.5,[[4.75,-1.25,0],[-1.5,-6.0,1]]],[1.75,[[4.5,-1.5,0],[-1.75,-6.0,1]]],[2.0,[[4.0,-1.75,0],[-2.0,-6.0,1]]]]},"4":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.5,0],[0.0,-6.0,1],[-6.25,-8.0,2]]],[0.25,[[6.0,0.25,0],[-0.25,-6.25,1],[-6.5,-8.0,2]]],[0.5,[[5.75,-0.25,0],[-0.5,-6.5,1],[-6.75,-8.0,2]]],[0.75,[[5.5,-0.5,0],[-0.5,-6.75,1],[-7.0,-8.0,2]]],[1.0,[[5.25,-0.5,0],[-0.75,-7.0,1],[-7.25,-8.0,2]]],[1.25,[[5.0,-0.75,0],[-1.25,-7.25,1],[-7.5,-8.0,2]]],[1.5,[[4.75,-1.25,0],[-1.5,-7.5,1],[-7.75,-8.0,2]]],[1.75,[[4.5,-1.5,0],[-1.75,-7.75,1],[-8.0,-8.0,2]]],[2.0,[[4.0,-1.5,0],[-1.75,-8.0,1]]],[2.25,[[4.0,-1.75,0],[-2.25,-8.0,1]]],[2.5,[[3.75,-2.25,0],[-2.5,-8.0,1]]],[2.75,[[3.5,-2.5,0],[-2.75,-8.0,1]]],[3.0,[[3.0,-2.75,0],[-2.75,-8.0,1]]]]},"5":{"dias":[["65"],["75"],["70"]],"grid":[[0.0,[[6.0,0.5,0],[0.25,-5.75,1],[-6.25,-8.0,2]]],[0.25,[[5.75,0.25,0],[0.0,-6.25,1],[-6.5,-8.0,2]]],[0.5,[[5.5,0.0,0],[-0.25,-6.5,1],[-6.75,-8.0,2]]],[0.75,[[5.5,-0.25,0],[-0.5,-6.75,1],[-7.0,-8.0,2]]],[1.0,[[5.0,-0.5,0],[-0.75,-7.0,1],[-7.25,-8.0,2]]],[1.25,[[4.75,-0.75,0],[-1.25,-7.25,1],[-7.5,-8.0,2]]],[1.5,[[4.5,-1.25,0],[-1.5,-7.5,1],[-7.75,-8.0,2]]],[1.75,[[4.5,-1.5,0],[-1.75,-7.75,1],[-8.0,-8.0,2]]],[2.0,[[4.0,-1.75,0],[-2.0,-8.0,1]]]]}};
+
 /* ── Barvy (fototropní čočky). Klíč = id produktu. Pořadí = pořadí v nabídce,
    první barva je výchozí. Produkty, které tu nejsou, jsou čiré (bez výběru barvy). ── */
 const COLOR_OPTIONS = {
@@ -803,6 +813,41 @@ function setupTintSelect() {
   document.getElementById('tint-cnt').textContent = tints.length ? tints.length : '';
 }
 
+/* ── Úprava (povrchová vrstva) — zatím jen Optiswiss. Na rozdíl od Barvy/Tónování se tu nevybírá
+   ZE seznamu hodnot, ale ze seznamu objektů {desc, code} — výběr totiž určuje i objednací kód,
+   který se jinak u Optiswiss (na rozdíl od RED/MI) neváže napevno k produktu, ale ke zvolené
+   úpravě. Klíč = id skupiny v SWISS_GROUPS. ── */
+function coatingsFor(mfr, id) {
+  if (mfr !== 'swiss') return [];
+  const g = SWISS_GROUPS.find(x => x.id === id);
+  return g ? g.coatings : [];
+}
+function setupCoatingSelect() {
+  const sel = document.getElementById('coating');
+  const coatings = selectedProd ? coatingsFor(selectedProd.mfr, selectedProd.id) : [];
+  if (coatings.length) {
+    sel.innerHTML = coatings.map(c => `<option value="${c.code}">${c.desc} (${c.code})</option>`).join('');
+    sel.disabled = false;
+  } else {
+    sel.innerHTML = '<option value="">—</option>';
+    sel.disabled = true;
+  }
+  document.getElementById('coating-cnt').textContent = coatings.length ? coatings.length : '';
+}
+
+/* ── Pomocné funkce pro 3 výrobce (MI.OPTICS / RED Label / Optiswiss) — ať se větvení
+   podle výrobce neopakuje na desítce míst jako trojitý ternárník. ── */
+function gridStoreFor(mfr) {
+  if (mfr === 'red') return RED_GRID;
+  if (mfr === 'swiss') return SWISS_GRID;
+  return MI_GRID;
+}
+function mfrDisplayName(mfr) {
+  if (mfr === 'red') return 'RED Label';
+  if (mfr === 'swiss') return 'Optiswiss';
+  return 'MI.OPTICS';
+}
+
 function sphOptions() {
   const o = [];
   for (let v = 600; v >= -600; v -= 25) {
@@ -855,9 +900,9 @@ function cylOptionsRange(maxMag) {
    Když uživatel změní Sph, přefiltruje se nabídka Cyl jen na hodnoty, které pro
    tenhle Sph mají v gridu záznam (a naopak). ── */
 function sphValueList() {
-  const isRed = selectedProd.mfr === 'red';
+  const ranged = selectedProd.mfr === 'red' || selectedProd.mfr === 'swiss';
   const list = [];
-  if (isRed) {
+  if (ranged) {
     const lo = Math.round(selectedProd.sphMin*4), hi = Math.round(selectedProd.sphMax*4);
     for (let v = hi; v >= lo; v--) list.push(v/4);
   } else {
@@ -878,13 +923,11 @@ function buildCylOptions(list) {
   return list.map(v => { const s = v.toFixed(2); return `<option value="${s}">${v===0?'0.00':'+'+s}</option>`; }).join('');
 }
 function validCylsForSph(sph) {
-  const isRed = selectedProd.mfr === 'red';
-  const store = isRed ? RED_GRID : MI_GRID;
+  const store = gridStoreFor(selectedProd.mfr);
   return cylValueList().filter(c => lookupGridDia(store, selectedProd.id, sph, c));
 }
 function validSphsForCyl(cyl) {
-  const isRed = selectedProd.mfr === 'red';
-  const store = isRed ? RED_GRID : MI_GRID;
+  const store = gridStoreFor(selectedProd.mfr);
   return sphValueList().filter(s => lookupGridDia(store, selectedProd.id, s, cyl));
 }
 /* opts.preferValue: konkrétní hodnota, kterou upřednostnit, pokud je v přefiltrovaném
@@ -1009,6 +1052,33 @@ function renderProductTable() {
         tbody.appendChild(tr);
       });
     });
+  } else if (selectedMfr === 'swiss') {
+    thead.innerHTML = `<tr>
+      <th style="width:28px"></th>
+      <th>Produkt</th><th>Kód</th><th>Index</th><th>Úprava</th><th>Průměr</th><th>Rozsah Sph</th><th>Cyl (max)</th>
+    </tr>`;
+    /* Každá skupina (= stránka katalogu) je jeden řádek — 5 povrchových úprav v ní má stejný
+       rozsah Sph/Cyl i tabulku Ø, liší se jen úpravou/kódem, takže se nenabízí jako 5 samostatných
+       produktů. Kódy a názvy úprav se tu zobrazí jen informativně; konkrétní úprava (a tím kód) se
+       vybírá až v kroku Parametry Rx (pole „Úprava"). */
+    SWISS_GROUPS.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.className = 'pr';
+      const g = SWISS_GRID[p.id];
+      const allDias = g ? Array.from(new Set(g.dias.flat())).sort((a,b) => parseFloat(a) - parseFloat(b)) : [];
+      tr.innerHTML = `
+        <td><span class="radio"></span></td>
+        <td><strong>${p.pageName}</strong></td>
+        <td class="code">${p.coatings.map(c=>c.code).join(', ')}</td>
+        <td>${p.index}</td>
+        <td style="color:var(--muted);font-size:12px">${p.coatings.map(c=>c.desc).join(', ')}</td>
+        <td><div class="dia-pills">${allDias.map(d=>`<span class="dia-pill">Ø${d}</span>`).join('')}</div></td>
+        <td>${p.sphMax>=0?'+':''}${p.sphMax.toFixed(2)} až ${p.sphMin>=0?'+':''}${p.sphMin.toFixed(2)}</td>
+        <td>+${p.cylMax.toFixed(2)}</td>
+      `;
+      tr.onclick = () => selectSwissProduct(p, tr);
+      tbody.appendChild(tr);
+    });
   } else {
     thead.innerHTML = `<tr>
       <th style="width:28px"></th>
@@ -1051,18 +1121,31 @@ function selectRedProduct(p, tr) {
   setupRxForProduct();
 }
 
+function selectSwissProduct(p, tr) {
+  document.querySelectorAll('.pr').forEach(r => r.classList.remove('sel'));
+  tr.classList.add('sel');
+  selectedProd = Object.assign({ mfr: 'swiss' }, p);
+  document.getElementById('btn-to-rx').disabled = false;
+  setupRxForProduct();
+}
+
 /* ── Rx step setup — pro RED se rozsahy Sph/Cyl generují dle konkrétního produktu ── */
 function setupRxForProduct() {
   updateStepLocks();
   ['r-ax','l-ax'].forEach(id => { const s = document.getElementById(id); s.selectedIndex = 0; s.disabled = false; });
 
-  const isRed = selectedProd.mfr === 'red';
-  const label = isRed
-    ? 'RED Label — ' + (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`)
-    : 'MI.OPTICS — ' + selectedProd.name;
+  const mfr = selectedProd.mfr;
+  let label;
+  if (mfr === 'red') {
+    label = 'RED Label — ' + (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`);
+  } else if (mfr === 'swiss') {
+    label = 'Optiswiss — ' + `${selectedProd.pageName} (index ${selectedProd.index})`;
+  } else {
+    label = 'MI.OPTICS — ' + selectedProd.name;
+  }
   document.getElementById('rx-product-name').textContent = label;
 
-  if (selectedProd.mfr === 'red') {
+  if (mfr === 'red' || mfr === 'swiss') {
     const sphHtml = sphOptionsRange(selectedProd.sphMin, selectedProd.sphMax);
     ['r-sph','l-sph'].forEach(id => {
       const s = document.getElementById(id);
@@ -1085,6 +1168,7 @@ function setupRxForProduct() {
   updateDia('l');
   setupColorSelect();
   setupTintSelect();
+  setupCoatingSelect();
   updateRecapButtonState();
 }
 
@@ -1104,13 +1188,12 @@ function lookupGridDia(store, prodId, sph, cylMag) {
 
 function updateDia(eye) {
   if (!selectedProd) return;
-  const isRed = selectedProd.mfr === 'red';
   const sph = parseFloat(document.getElementById(eye+'-sph').value);
   const cyl = parseFloat(document.getElementById(eye+'-cyl').value);
   const cylMag = Math.abs(cyl);
   const diaSel = document.getElementById(eye+'-dia');
   const warn = document.getElementById(eye+'-dia-warn');
-  const dias = lookupGridDia(isRed ? RED_GRID : MI_GRID, selectedProd.id, sph, cylMag);
+  const dias = lookupGridDia(gridStoreFor(selectedProd.mfr), selectedProd.id, sph, cylMag);
   if (dias) {
     diaSel.innerHTML = dias.map(d=>`<option value="${d}">Ø${d} mm</option>`).join('');
     diaSel.disabled = false;
@@ -1118,7 +1201,7 @@ function updateDia(eye) {
   } else {
     diaSel.innerHTML = '<option value="">— nedostupné —</option>';
     diaSel.disabled = true;
-    warn.textContent = `Tato kombinace Sph/Cyl není pro zvolenou čočku ${isRed ? 'RED Label' : 'MI.OPTICS'} dostupná.`;
+    warn.textContent = `Tato kombinace Sph/Cyl není pro zvolenou čočku ${mfrDisplayName(selectedProd.mfr)} dostupná.`;
     warn.style.display = 'block';
   }
   updateRecapButtonState();
@@ -1202,13 +1285,29 @@ function currentSelectionValid() {
 
 function buildCartItem() {
   const g = id => document.getElementById(id).value || '';
-  const isRed = selectedProd.mfr === 'red';
+  const mfr = selectedProd.mfr;
+  let name, coat, code;
+  if (mfr === 'red') {
+    name = selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`;
+    coat = selectedProd.desc || '—';
+    code = selectedProd.code;
+  } else if (mfr === 'swiss') {
+    const coatings = coatingsFor('swiss', selectedProd.id);
+    const chosen = coatings.find(c => c.code === g('coating')) || coatings[0];
+    name = selectedProd.group;
+    coat = chosen ? chosen.desc : '—';
+    code = chosen ? chosen.code : '—';
+  } else {
+    name = selectedProd.name;
+    coat = selectedProd.coat;
+    code = selectedProd.code;
+  }
   return {
-    mfr: selectedProd.mfr,
-    name: isRed ? (selectedProd.desc ? `${selectedProd.family} ${selectedProd.index} ${selectedProd.desc}` : `${selectedProd.family} ${selectedProd.index}`) : selectedProd.name,
-    code: selectedProd.code,
+    mfr: mfr,
+    name: name,
+    code: code,
     index: selectedProd.index,
-    coat: isRed ? (selectedProd.desc || '—') : selectedProd.coat,
+    coat: coat,
     pairs: g('pairs') || '1',
     color: g('color'),
     tint: g('tint'),
@@ -1271,6 +1370,8 @@ function restoreRxValues(item) {
   if (item.color && [...colSel.options].some(o => o.value === item.color)) colSel.value = item.color;
   const tintSel = document.getElementById('tint');
   if (item.tint && [...tintSel.options].some(o => o.value === item.tint)) tintSel.value = item.tint;
+  const coatSel = document.getElementById('coating');
+  if (item.code && [...coatSel.options].some(o => o.value === item.code)) coatSel.value = item.code;
   updateRecapButtonState();
 }
 
@@ -1335,7 +1436,7 @@ function cartItemHtml(item, i, readOnly) {
     <div class="cart-item">
       <div class="cart-item-head">
         <div>
-          <div class="cart-item-title">${item.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${esc(item.name)}</div>
+          <div class="cart-item-title">${mfrDisplayName(item.mfr)} — ${esc(item.name)}</div>
           <div class="cart-item-sub">${esc(item.index)}${item.code && item.code !== '—' ? ' · ' + esc(item.code) : ''} · ${esc(item.coat)}${item.color ? ' · <strong>Barva: ' + esc(item.color) + '</strong>' : ''}${item.tint ? ' · <strong>Tónování: ' + esc(item.tint) + '</strong>' : ''}</div>
         </div>${actions}
       </div>
@@ -1412,7 +1513,7 @@ function orderEmailHtml(order) {
   return order.items.map((it, i) => `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:10px;margin:0 0 16px;border-collapse:separate;overflow:hidden">
   <tr><td style="padding:14px 16px;background:#ffffff">
-    <div style="font:700 11px Arial,sans-serif;color:#2563eb;text-transform:uppercase;letter-spacing:.5px">Položka ${i+1} · ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'}</div>
+    <div style="font:700 11px Arial,sans-serif;color:#2563eb;text-transform:uppercase;letter-spacing:.5px">Položka ${i+1} · ${mfrDisplayName(it.mfr)}</div>
     <div style="font:700 16px Arial,sans-serif;color:#111827;margin:4px 0 2px">${esc(it.name)}</div>
     <div style="font:13px Arial,sans-serif;color:#6b7280">Kód <strong style="color:#111827">${esc(it.code)}</strong> · index ${esc(it.index)} · ${esc(it.coat)} · <strong style="color:#111827">${pairsLabel(it.pairs)}</strong>${it.color ? ` · Barva: <strong style="color:#111827">${esc(it.color)}</strong>` : ''}${it.tint ? ` · Tónování: <strong style="color:#111827">${esc(it.tint)}</strong>` : ''}</div>
   </td></tr>
@@ -1428,7 +1529,7 @@ function orderEmailHtml(order) {
 }
 function orderEmailText(order) {
   return order.items.map((it, i) =>
-    `${i+1}. ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${it.name} (kód ${it.code}), ${pairsLabel(it.pairs)}${it.color ? ', barva ' + it.color : ''}${it.tint ? ', tónování ' + it.tint : ''}\n` +
+    `${i+1}. ${mfrDisplayName(it.mfr)} — ${it.name} (kód ${it.code}), ${pairsLabel(it.pairs)}${it.color ? ', barva ' + it.color : ''}${it.tint ? ', tónování ' + it.tint : ''}\n` +
     `   P: Sph ${it.r.sph} Cyl ${it.r.cyl} Osa ${it.r.ax || '—'} Ø${it.r.dia}\n` +
     `   L: Sph ${it.l.sph} Cyl ${it.l.cyl} Osa ${it.l.ax || '—'} Ø${it.l.dia}` +
     (it.note ? `\n   Poznámka: ${it.note}` : '')
