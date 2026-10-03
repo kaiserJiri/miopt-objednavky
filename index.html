@@ -568,11 +568,12 @@
                 </div>
               </div>
               <div class="rx-divider"></div>
-              <div class="rx-row rx-2" style="max-width:460px">
+              <div class="rx-row rx-3" style="max-width:620px">
                 <div class="rx-field"><label>Počet párů</label>
                   <select id="pairs"><option value="1">1 pár</option><option value="2">2 páry</option><option value="3">3 páry</option></select>
                 </div>
                 <div class="rx-field"><label>Barva <span class="rx-count" id="color-cnt"></span></label><select id="color"></select></div>
+                <div class="rx-field"><label>Tónování <span class="rx-count" id="tint-cnt"></span></label><select id="tint"></select></div>
               </div>
               <div class="rx-row" style="max-width:460px">
                 <div class="rx-field"><label>Poznámka</label><input type="text" id="note" placeholder="Volitelný komentář..."></div>
@@ -753,13 +754,29 @@ const COLOR_OPTIONS = {
   red: { 16: ['Hnědá', 'Šedá'],                                     /* Org 1,5 SHC Transitions */
          17: ['Šedá'],                                              /* Org 1,5 SHC Transitions XTRActive */
          18: ['Hnědá', 'Šedá'],                                     /* Org 1,6 UltimaS Transitions */
-         21: ['Hnědá'] }                                            /* Min 1,5 Photo SAR */
+         21: ['Hnědá'],                                             /* Min 1,5 Photo SAR */
+         24: ['Hnědá', 'Šedá', 'Zelená'],                           /* Sun 1,5 */
+         25: ['Hnědá', 'Šedá', 'Zelená'],                           /* Sun 1,5 Sunset */
+         26: ['Hnědá', 'Šedá', 'Zelená'] }                          /* Sun 1,6 Sunset */
 };
-const COLOR_SWATCH = { 'Hnědá': '#8b5a2b', 'Šedá': '#6b7280' };
+const COLOR_SWATCH = { 'Hnědá': '#8b5a2b', 'Šedá': '#6b7280', 'Zelená': '#3f7d4f' };
 function colorsFor(mfr, id) { return (COLOR_OPTIONS[mfr] && COLOR_OPTIONS[mfr][id]) || []; }
 function colorChipsHtml(colors) {
   if (!colors.length) return '';
   return `<div class="color-opts">Barvy: ${colors.map(c => `<span class="color-chip"><span class="color-dot" style="background:${COLOR_SWATCH[c] || '#999'}"></span>${c}</span>`).join('')}</div>`;
+}
+
+/* ── Tónování (%) — zatím jen Red Sun. Klíč = id produktu, první % je výchozí.
+   Produkty, které tu nejsou, tónování nenabízí (pole zůstane prázdné/zašedlé). ── */
+const TINT_OPTIONS = {
+  red: { 24: ['85%', '75%'],                                        /* Sun 1,5 */
+         25: ['85%', '75%'],                                        /* Sun 1,5 Sunset */
+         26: ['85%'] }                                              /* Sun 1,6 Sunset — jen 85% */
+};
+function tintsFor(mfr, id) { return (TINT_OPTIONS[mfr] && TINT_OPTIONS[mfr][id]) || []; }
+function tintChipsHtml(tints) {
+  if (!tints.length) return '';
+  return `<div class="color-opts">Tónování: ${tints.map(t => `<span class="color-chip">${t}</span>`).join('')}</div>`;
 }
 function setupColorSelect() {
   const sel = document.getElementById('color');
@@ -772,6 +789,18 @@ function setupColorSelect() {
     sel.disabled = true;
   }
   document.getElementById('color-cnt').textContent = colors.length ? colors.length : '';
+}
+function setupTintSelect() {
+  const sel = document.getElementById('tint');
+  const tints = selectedProd ? tintsFor(selectedProd.mfr, selectedProd.id) : [];
+  if (tints.length) {
+    sel.innerHTML = tints.map(t => `<option value="${t}">${t}</option>`).join('');
+    sel.disabled = false;
+  } else {
+    sel.innerHTML = '<option value="">—</option>';
+    sel.disabled = true;
+  }
+  document.getElementById('tint-cnt').textContent = tints.length ? tints.length : '';
 }
 
 function sphOptions() {
@@ -968,7 +997,7 @@ function renderProductTable() {
         const allDias = g ? Array.from(new Set(g.dias.flat())).sort((a,b) => parseFloat(a) - parseFloat(b)) : [];
         tr.innerHTML = `
           <td><span class="radio"></span></td>
-          <td><strong>${dispName}</strong>${colorChipsHtml(colorsFor('red', p.id))}</td>
+          <td><strong>${dispName}</strong>${colorChipsHtml(colorsFor('red', p.id))}${tintChipsHtml(tintsFor('red', p.id))}</td>
           <td class="code">${p.code}</td>
           <td>${p.index}</td>
           <td style="color:var(--muted);font-size:12px">${p.desc || '—'}</td>
@@ -1055,6 +1084,7 @@ function setupRxForProduct() {
   updateDia('r');
   updateDia('l');
   setupColorSelect();
+  setupTintSelect();
   updateRecapButtonState();
 }
 
@@ -1181,6 +1211,7 @@ function buildCartItem() {
     coat: isRed ? (selectedProd.desc || '—') : selectedProd.coat,
     pairs: g('pairs') || '1',
     color: g('color'),
+    tint: g('tint'),
     note: g('note'),
     r: { sph: g('r-sph'), cyl: g('r-cyl'), ax: document.getElementById('r-ax').disabled ? '' : g('r-ax'), dia: g('r-dia') },
     l: { sph: g('l-sph'), cyl: g('l-cyl'), ax: document.getElementById('l-ax').disabled ? '' : g('l-ax'), dia: g('l-dia') },
@@ -1238,6 +1269,8 @@ function restoreRxValues(item) {
   document.getElementById('note').value = item.note || '';
   const colSel = document.getElementById('color');
   if (item.color && [...colSel.options].some(o => o.value === item.color)) colSel.value = item.color;
+  const tintSel = document.getElementById('tint');
+  if (item.tint && [...tintSel.options].some(o => o.value === item.tint)) tintSel.value = item.tint;
   updateRecapButtonState();
 }
 
@@ -1303,7 +1336,7 @@ function cartItemHtml(item, i, readOnly) {
       <div class="cart-item-head">
         <div>
           <div class="cart-item-title">${item.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${esc(item.name)}</div>
-          <div class="cart-item-sub">${esc(item.index)}${item.code && item.code !== '—' ? ' · ' + esc(item.code) : ''} · ${esc(item.coat)}${item.color ? ' · <strong>Barva: ' + esc(item.color) + '</strong>' : ''}</div>
+          <div class="cart-item-sub">${esc(item.index)}${item.code && item.code !== '—' ? ' · ' + esc(item.code) : ''} · ${esc(item.coat)}${item.color ? ' · <strong>Barva: ' + esc(item.color) + '</strong>' : ''}${item.tint ? ' · <strong>Tónování: ' + esc(item.tint) + '</strong>' : ''}</div>
         </div>${actions}
       </div>
       <table class="rtable">
@@ -1381,7 +1414,7 @@ function orderEmailHtml(order) {
   <tr><td style="padding:14px 16px;background:#ffffff">
     <div style="font:700 11px Arial,sans-serif;color:#2563eb;text-transform:uppercase;letter-spacing:.5px">Položka ${i+1} · ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'}</div>
     <div style="font:700 16px Arial,sans-serif;color:#111827;margin:4px 0 2px">${esc(it.name)}</div>
-    <div style="font:13px Arial,sans-serif;color:#6b7280">Kód <strong style="color:#111827">${esc(it.code)}</strong> · index ${esc(it.index)} · ${esc(it.coat)} · <strong style="color:#111827">${pairsLabel(it.pairs)}</strong>${it.color ? ` · Barva: <strong style="color:#111827">${esc(it.color)}</strong>` : ''}</div>
+    <div style="font:13px Arial,sans-serif;color:#6b7280">Kód <strong style="color:#111827">${esc(it.code)}</strong> · index ${esc(it.index)} · ${esc(it.coat)} · <strong style="color:#111827">${pairsLabel(it.pairs)}</strong>${it.color ? ` · Barva: <strong style="color:#111827">${esc(it.color)}</strong>` : ''}${it.tint ? ` · Tónování: <strong style="color:#111827">${esc(it.tint)}</strong>` : ''}</div>
   </td></tr>
   <tr><td style="padding:0">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse">
@@ -1395,7 +1428,7 @@ function orderEmailHtml(order) {
 }
 function orderEmailText(order) {
   return order.items.map((it, i) =>
-    `${i+1}. ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${it.name} (kód ${it.code}), ${pairsLabel(it.pairs)}${it.color ? ', barva ' + it.color : ''}\n` +
+    `${i+1}. ${it.mfr === 'red' ? 'RED Label' : 'MI.OPTICS'} — ${it.name} (kód ${it.code}), ${pairsLabel(it.pairs)}${it.color ? ', barva ' + it.color : ''}${it.tint ? ', tónování ' + it.tint : ''}\n` +
     `   P: Sph ${it.r.sph} Cyl ${it.r.cyl} Osa ${it.r.ax || '—'} Ø${it.r.dia}\n` +
     `   L: Sph ${it.l.sph} Cyl ${it.l.cyl} Osa ${it.l.ax || '—'} Ø${it.l.dia}` +
     (it.note ? `\n   Poznámka: ${it.note}` : '')
@@ -1461,7 +1494,7 @@ async function submitOrder() {
 
   /* do databáze a e-mailu jde jen to podstatné (bez interního _prod) */
   const items = CART.map(it => ({ mfr: it.mfr, name: it.name, code: it.code, index: it.index, coat: it.coat,
-    pairs: it.pairs, color: it.color || '', note: it.note, r: Object.assign({}, it.r), l: Object.assign({}, it.l) }));
+    pairs: it.pairs, color: it.color || '', tint: it.tint || '', note: it.note, r: Object.assign({}, it.r), l: Object.assign({}, it.l) }));
 
   let order;
   try {
