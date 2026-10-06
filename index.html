@@ -335,7 +335,12 @@
   .c-orange .stat-n { color: var(--stat-orange); }
   .c-purple .stat-n { color: var(--stat-purple); }
   .htable { width: 100%; min-width: 480px; border-collapse: collapse; }
-  #view-hist .card, #view-hist .stats { max-width: 980px; }
+  #view-hist .card, #view-hist .stats { max-width: 1400px; }
+  /* pevné šířky krátkých sloupců → na širokém monitoru se neroztahují, místo dostane jen „Položky“ */
+  .htable th:nth-child(1) { width: 110px; }
+  .htable th:nth-child(2) { width: 190px; }
+  .htable th:nth-child(4) { width: 110px; }
+  .htable th:nth-child(5) { width: 140px; }
   .htable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .htable td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
   .htable tbody tr:last-child td { border: none; }
@@ -722,7 +727,8 @@ const ORDER_RECIPIENT = "j.kaiser@mi-optics.cz";
 const REPS = {
   "dusek@mi-optics.cz":    { name: "Richard Dušek" },
   "j.kaiser@mi-optics.cz": { name: "Jiří Kaiser" },
-  "puzder@mi-optics.sk":   { name: "Adam Puzder" }
+  "puzder@mi-optics.sk":   { name: "Adam Puzder" },
+  "bohmanova@mi-optics.cz": { name: "Markéta Bohmanová" }
 };
 
 const FB_ENABLED   = !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLNIT") && typeof firebase !== "undefined";
@@ -1693,6 +1699,7 @@ function showView(v) {
   document.getElementById('nav-'+v).classList.add('active');
   const t = {new:'Nová objednávka', hist:'Historie objednávek', prof:'Profil'};
   document.getElementById('topbar-title').textContent = t[v];
+  document.getElementById('topbar-meta').style.visibility = v === 'new' ? '' : 'hidden';
   if (v === 'hist') loadHistory();
   closeMobileNav();
 }
