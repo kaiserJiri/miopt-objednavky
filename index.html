@@ -221,6 +221,7 @@
 
   /* Manufacturer grid */
   .mfr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .mfr-card, .ptable tr.pr { user-select: none; }
   .mfr-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 14px; cursor: pointer; text-align: center; transition: border-color .15s, background .15s, transform .15s, box-shadow .15s; background: var(--subtle-bg); }
   .mfr-card:hover:not(.disabled) { border-color: var(--accent); background: var(--card); transform: translateY(-2px); box-shadow: var(--shadow); }
   .mfr-card.selected { border-color: var(--accent); background: var(--active-bg); }
@@ -274,6 +275,12 @@
   }
   .rx-field select:focus, .rx-field input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
   .rx-field select:disabled { background: var(--muted-bg); color: var(--disabled-color); cursor: not-allowed; }
+  .eye-col { transition: opacity .2s ease; }
+  .eye-col.off { opacity: .35; pointer-events: none; }
+  .eye-copy { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--active-bg); border: 1px solid var(--active-border); border-radius: 14px; padding: 3px 10px; cursor: pointer; transition: background .12s, color .12s; }
+  .eye-copy:hover { background: var(--accent); color: #fff; }
+  .eye-copy[hidden] { display: none; }
+  .rx-field input[type=number] { -moz-appearance: textfield; }
   .rx-divider { border-top: 1px solid var(--border); margin: 14px 0; }
   .rx-warn { font-size: 11px; color: var(--red-accent); margin-top: 5px; line-height: 1.4; animation: fade-up .2s ease; }
 
@@ -328,6 +335,7 @@
   .c-orange .stat-n { color: var(--stat-orange); }
   .c-purple .stat-n { color: var(--stat-purple); }
   .htable { width: 100%; min-width: 480px; border-collapse: collapse; }
+  #view-hist .card, #view-hist .stats { max-width: 980px; }
   .htable th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .htable td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
   .htable tbody tr:last-child td { border: none; }
@@ -489,7 +497,7 @@
             <div class="steps-track"><div class="steps-fill" id="steps-fill"></div></div>
             <div class="step active" id="step-0" onclick="goToStep(0)"><span class="sn">1</span><span class="sl">Výrobce</span></div>
             <div class="step" id="step-1" onclick="goToStep(1)"><span class="sn">2</span><span class="sl">Čočka</span></div>
-            <div class="step locked" id="step-2" onclick="goToStep(2)"><span class="sn">3</span><span class="sl">Parametry Rx</span></div>
+            <div class="step locked" id="step-2" onclick="goToStep(2)"><span class="sn">3</span><span class="sl">Parametry</span></div>
             <div class="step" id="step-3" onclick="goToStep(3)"><span class="sn">4</span><span class="sl">Rekapitulace</span></div>
           </div>
 
@@ -498,17 +506,17 @@
             <div class="card">
               <div class="card-title">Vyberte výrobce</div>
               <div class="mfr-grid">
-                <div class="mfr-card selected" id="mfr-mi" onclick="selMfr(this,'mi')">
+                <div class="mfr-card selected" id="mfr-mi" onclick="selMfr(this,'mi')" ondblclick="selMfr(this,'mi'); goStep(1)">
                   <div class="mfr-name">MI.OPTICS</div>
                   <div class="mfr-desc">Skladové jednoohniskové čočky</div>
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
-                <div class="mfr-card red-brand" id="mfr-red" onclick="selMfr(this,'red')">
+                <div class="mfr-card red-brand" id="mfr-red" onclick="selMfr(this,'red')" ondblclick="selMfr(this,'red'); goStep(1)">
                   <div class="mfr-name">RED Label</div>
                   <div class="mfr-desc">Skladové jednoohniskové čočky</div>
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
                 </div>
-                <div class="mfr-card" id="mfr-swiss" onclick="selMfr(this,'swiss')">
+                <div class="mfr-card" id="mfr-swiss" onclick="selMfr(this,'swiss')" ondblclick="selMfr(this,'swiss'); goStep(1)">
                   <div class="mfr-name">Optiswiss</div>
                   <div class="mfr-desc">Skladové jednoohniskové čočky</div>
                   <span class="mfr-badge b-ok">✓ Dostupné</span>
@@ -538,45 +546,42 @@
           <!-- S2 -->
           <div id="s2" style="display:none">
             <div class="card">
-              <div class="card-title">Parametry Rx</div>
+              <div class="card-title">Parametry</div>
               <div class="rx-edit-badge" id="rx-edit-badge" style="display:none">✎ Upravujete položku již přidanou v košíku</div>
               <div class="rx-product-name" id="rx-product-name"></div>
               <div class="rx-wrap">
-                <div>
-                  <div class="eye-title"><div class="eye-dot eye-r">P</div>Pravé oko</div>
+                <div class="eye-col" id="eye-col-r">
+                  <div class="eye-title"><div class="eye-dot eye-r">P</div>Pravé oko<button type="button" class="eye-copy" id="copy-l2r" onclick="copyEye('l','r')" title="Nastavit pravé oko stejně jako levé">← Převzít z levého</button></div>
                   <div class="rx-row rx-3">
-                    <div class="rx-field"><label>Sph <span class="rx-count" id="r-sph-cnt"></span></label><select id="r-sph" onchange="onRxChange('r','sph')"></select></div>
-                    <div class="rx-field"><label>Cyl <span class="rx-count" id="r-cyl-cnt"></span></label><select id="r-cyl" onchange="onRxChange('r','cyl')"></select></div>
-                    <div class="rx-field"><label>Osa ° <span class="rx-count" id="r-ax-cnt"></span></label><select id="r-ax" disabled></select></div>
-                  </div>
-                  <div class="rx-row" style="max-width:220px">
-                    <div class="rx-field"><label>Průměr (mm) <span class="rx-count" id="r-dia-cnt"></span></label><select id="r-dia"></select></div>
+                    <div class="rx-field"><label>Sph</label><select id="r-sph" onchange="onRxChange('r','sph')"></select></div>
+                    <div class="rx-field"><label>Cyl</label><select id="r-cyl" onchange="onRxChange('r','cyl')"></select></div>
+                    <div class="rx-field"><label>Průměr (mm)</label><select id="r-dia"></select></div>
                   </div>
                   <div class="rx-warn" id="r-dia-warn" style="display:none"></div>
                 </div>
-                <div>
-                  <div class="eye-title"><div class="eye-dot eye-l">L</div>Levé oko</div>
+                <div class="eye-col" id="eye-col-l">
+                  <div class="eye-title"><div class="eye-dot eye-l">L</div>Levé oko<button type="button" class="eye-copy" id="copy-r2l" onclick="copyEye('r','l')" title="Nastavit levé oko stejně jako pravé">Převzít z pravého →</button></div>
                   <div class="rx-row rx-3">
-                    <div class="rx-field"><label>Sph <span class="rx-count" id="l-sph-cnt"></span></label><select id="l-sph" onchange="onRxChange('l','sph')"></select></div>
-                    <div class="rx-field"><label>Cyl <span class="rx-count" id="l-cyl-cnt"></span></label><select id="l-cyl" onchange="onRxChange('l','cyl')"></select></div>
-                    <div class="rx-field"><label>Osa ° <span class="rx-count" id="l-ax-cnt"></span></label><select id="l-ax" disabled></select></div>
-                  </div>
-                  <div class="rx-row" style="max-width:220px">
-                    <div class="rx-field"><label>Průměr (mm) <span class="rx-count" id="l-dia-cnt"></span></label><select id="l-dia"></select></div>
+                    <div class="rx-field"><label>Sph</label><select id="l-sph" onchange="onRxChange('l','sph')"></select></div>
+                    <div class="rx-field"><label>Cyl</label><select id="l-cyl" onchange="onRxChange('l','cyl')"></select></div>
+                    <div class="rx-field"><label>Průměr (mm)</label><select id="l-dia"></select></div>
                   </div>
                   <div class="rx-warn" id="l-dia-warn" style="display:none"></div>
                 </div>
               </div>
               <div class="rx-divider"></div>
-              <div class="rx-row rx-3" style="max-width:620px">
-                <div class="rx-field"><label>Počet párů</label>
-                  <select id="pairs"><option value="1">1 pár</option><option value="2">2 páry</option><option value="3">3 páry</option></select>
+              <div class="rx-row rx-2" style="max-width:460px">
+                <div class="rx-field"><label>Objednat</label>
+                  <select id="eyes" onchange="onEyesChange()"><option value="both">Pár (pravé + levé)</option><option value="r">Jen pravé oko (1 kus)</option><option value="l">Jen levé oko (1 kus)</option></select>
                 </div>
-                <div class="rx-field"><label>Barva <span class="rx-count" id="color-cnt"></span></label><select id="color"></select></div>
-                <div class="rx-field"><label>Tónování <span class="rx-count" id="tint-cnt"></span></label><select id="tint"></select></div>
+                <div class="rx-field"><label id="qty-label">Počet párů</label><input type="number" id="pairs" min="1" max="99" step="1" value="1" inputmode="numeric" onchange="normalizeQty()"></div>
               </div>
-              <div class="rx-row rx-2" style="max-width:620px">
-                <div class="rx-field"><label>Úprava <span class="rx-count" id="coating-cnt"></span></label><select id="coating"></select></div>
+              <div class="rx-row rx-3" style="max-width:700px">
+                <div class="rx-field"><label>Barva</label><select id="color"></select></div>
+                <div class="rx-field"><label>Zabarvení</label><select id="tint"></select></div>
+                <div class="rx-field"><label>Úprava</label><select id="coating"></select></div>
+              </div>
+              <div class="rx-row" style="max-width:700px">
                 <div class="rx-field"><label>Poznámka</label><input type="text" id="note" placeholder="Volitelný komentář..."></div>
               </div>
             </div>
@@ -618,7 +623,7 @@
             <div class="card-title">Přehled objednávek</div>
             <div class="table-scroll">
             <table class="htable">
-              <thead><tr><th>Č.</th><th>Datum</th><th>Položky</th><th>Párů</th><th>Stav</th></tr></thead>
+              <thead><tr><th>Č.</th><th>Datum</th><th>Položky</th><th>Počet</th><th>Stav</th></tr></thead>
               <tbody id="hist-tbody"></tbody>
             </table>
             </div>
@@ -786,7 +791,7 @@ const TINT_OPTIONS = {
 function tintsFor(mfr, id) { return (TINT_OPTIONS[mfr] && TINT_OPTIONS[mfr][id]) || []; }
 function tintChipsHtml(tints) {
   if (!tints.length) return '';
-  return `<div class="color-opts">Tónování: ${tints.map(t => `<span class="color-chip">${t}</span>`).join('')}</div>`;
+  return `<div class="color-opts">Zabarvení: ${tints.map(t => `<span class="color-chip">${t}</span>`).join('')}</div>`;
 }
 function setupColorSelect() {
   const sel = document.getElementById('color');
@@ -798,7 +803,6 @@ function setupColorSelect() {
     sel.innerHTML = '<option value="">Bez barvy (čirá)</option>';
     sel.disabled = true;
   }
-  document.getElementById('color-cnt').textContent = colors.length ? colors.length : '';
 }
 function setupTintSelect() {
   const sel = document.getElementById('tint');
@@ -810,7 +814,6 @@ function setupTintSelect() {
     sel.innerHTML = '<option value="">—</option>';
     sel.disabled = true;
   }
-  document.getElementById('tint-cnt').textContent = tints.length ? tints.length : '';
 }
 
 /* ── Úprava (povrchová vrstva) — zatím jen Optiswiss. Na rozdíl od Barvy/Tónování se tu nevybírá
@@ -832,7 +835,6 @@ function setupCoatingSelect() {
     sel.innerHTML = '<option value="">—</option>';
     sel.disabled = true;
   }
-  document.getElementById('coating-cnt').textContent = coatings.length ? coatings.length : '';
 }
 
 /* ── Pomocné funkce pro 3 výrobce (MI.OPTICS / RED Label / Optiswiss) — ať se větvení
@@ -978,28 +980,7 @@ document.getElementById('r-sph').innerHTML = sphOptions();
 document.getElementById('l-sph').innerHTML = sphOptions();
 document.getElementById('r-cyl').innerHTML = cylOptions();
 document.getElementById('l-cyl').innerHTML = cylOptions();
-document.getElementById('r-ax').innerHTML  = axOptions();
-document.getElementById('l-ax').innerHTML  = axOptions();
 ['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
-
-/* ── Bublina s počtem hodnot u každého Rx selectu (Sph/Cyl/Osa/Průměr, obě oči).
-   Sleduje select přes MutationObserver, takže se počet aktualizuje automaticky
-   při každé změně nabídky (výběr produktu, přepočet Ø podle Sph/Cyl atd.),
-   bez nutnosti dohledávat všechna místa, která select.innerHTML přepisují. ── */
-(function initRxCounters() {
-  const map = [
-    ['r-sph','r-sph-cnt'], ['r-cyl','r-cyl-cnt'], ['r-ax','r-ax-cnt'], ['r-dia','r-dia-cnt'],
-    ['l-sph','l-sph-cnt'], ['l-cyl','l-cyl-cnt'], ['l-ax','l-ax-cnt'], ['l-dia','l-dia-cnt']
-  ];
-  map.forEach(([selId, cntId]) => {
-    const sel = document.getElementById(selId);
-    const cnt = document.getElementById(cntId);
-    if (!sel || !cnt) return;
-    const refresh = () => { cnt.textContent = sel.options.length; };
-    refresh();
-    new MutationObserver(refresh).observe(sel, { childList: true });
-  });
-})();
 
 let selectedMfr = 'mi';
 let selectedProd = null;
@@ -1049,6 +1030,7 @@ function renderProductTable() {
           <td>+${p.cylMax.toFixed(2)}</td>
         `;
         tr.onclick = () => selectRedProduct(p, tr);
+        tr.ondblclick = () => { selectRedProduct(p, tr); goStep(2); };
         tbody.appendChild(tr);
       });
     });
@@ -1077,6 +1059,7 @@ function renderProductTable() {
         <td>+${p.cylMax.toFixed(2)}</td>
       `;
       tr.onclick = () => selectSwissProduct(p, tr);
+      tr.ondblclick = () => { selectSwissProduct(p, tr); goStep(2); };
       tbody.appendChild(tr);
     });
   } else {
@@ -1100,6 +1083,7 @@ function renderProductTable() {
         <td>+${p.cylMax.toFixed(2)}</td>
       `;
       tr.onclick = () => selectMiProduct(p, tr);
+      tr.ondblclick = () => { selectMiProduct(p, tr); goStep(2); };
       tbody.appendChild(tr);
     });
   }
@@ -1132,7 +1116,6 @@ function selectSwissProduct(p, tr) {
 /* ── Rx step setup — pro RED se rozsahy Sph/Cyl generují dle konkrétního produktu ── */
 function setupRxForProduct() {
   updateStepLocks();
-  ['r-ax','l-ax'].forEach(id => { const s = document.getElementById(id); s.selectedIndex = 0; s.disabled = false; });
 
   const mfr = selectedProd.mfr;
   let label;
@@ -1211,8 +1194,8 @@ function updateRecapButtonState() {
   const btnCart = document.getElementById('btn-add-cart');
   let ok = true;
   if (selectedProd) {
-    const rOk = document.getElementById('r-dia').value !== '';
-    const lOk = document.getElementById('l-dia').value !== '';
+    const rOk = !eyeOn('r') || document.getElementById('r-dia').value !== '';
+    const lOk = !eyeOn('l') || document.getElementById('l-dia').value !== '';
     ok = rOk && lOk;
   }
   btnCart.disabled = !ok;
@@ -1230,8 +1213,45 @@ function onRxChange(eye, field) {
 function updateAxis(eye) {
   // Osa je vždy volitelná a vždy vybratelná, bez ohledu na Cyl — o zápisu osy
   // i u Cyl 0,00 rozhoduje obchodní zástupce, appka to nemá blokovat.
-  const ax = document.getElementById(eye+'-ax');
-  ax.disabled = false;
+  /* Osa byla z formuláře odstraněna (6. 10. 2026) — funkce zůstává kvůli volání z onRxChange. */
+}
+
+/* ── Pár / jen jedno oko (1 kus) ── */
+function currentEyes() { return document.getElementById('eyes').value || 'both'; }
+function eyeOn(eye) { const e = currentEyes(); return e === 'both' || e === eye; }
+function onEyesChange() {
+  const e = currentEyes();
+  document.getElementById('eye-col-r').classList.toggle('off', e === 'l');
+  document.getElementById('eye-col-l').classList.toggle('off', e === 'r');
+  document.getElementById('copy-r2l').hidden = e !== 'both';
+  document.getElementById('copy-l2r').hidden = e !== 'both';
+  document.getElementById('qty-label').textContent = e === 'both' ? 'Počet párů' : 'Počet kusů';
+  updateRecapButtonState();
+}
+function normalizeQty() {
+  const el = document.getElementById('pairs');
+  let v = parseInt(el.value, 10);
+  if (isNaN(v) || v < 1) v = 1;
+  if (v > 99) v = 99;
+  el.value = String(v);
+}
+/* Přenese Sph / Cyl / Průměr z jednoho oka na druhé (respektuje dostupné kombinace). */
+function copyEye(from, to) {
+  if (!selectedProd) return;
+  const v = id => document.getElementById(from + '-' + id).value;
+  const sphSel = document.getElementById(to + '-sph');
+  if (![...sphSel.options].some(o => o.value === v('sph'))) sphSel.innerHTML = buildSphOptions(sphValueList());
+  sphSel.value = v('sph');
+  refreshCylForSph(to, { preferValue: parseFloat(v('cyl')) });
+  updateDia(to);
+  const diaSel = document.getElementById(to + '-dia');
+  if ([...diaSel.options].some(o => o.value === v('dia'))) diaSel.value = v('dia');
+  updateRecapButtonState();
+}
+function qtyLabel(n, eyes) {
+  const v = parseInt(n, 10) || 1;
+  if (eyes === 'r' || eyes === 'l') return v + ' ks (' + (eyes === 'r' ? 'pravé' : 'levé') + ')';
+  return pairsLabel(v);
 }
 
 /* ── Progress bar nad kroky — výplň linky mezi kolečky podle aktuálního kroku
@@ -1280,7 +1300,7 @@ let CART = [];
 
 function currentSelectionValid() {
   if (!selectedProd) return false;
-  return document.getElementById('r-dia').value !== '' && document.getElementById('l-dia').value !== '';
+  return (!eyeOn('r') || document.getElementById('r-dia').value !== '') && (!eyeOn('l') || document.getElementById('l-dia').value !== '');
 }
 
 function buildCartItem() {
@@ -1308,12 +1328,13 @@ function buildCartItem() {
     code: code,
     index: selectedProd.index,
     coat: coat,
-    pairs: g('pairs') || '1',
+    pairs: String(Math.max(1, Math.min(99, parseInt(g('pairs'), 10) || 1))),
+    eyes: currentEyes(),
     color: g('color'),
     tint: g('tint'),
     note: g('note'),
-    r: { sph: g('r-sph'), cyl: g('r-cyl'), ax: document.getElementById('r-ax').disabled ? '' : g('r-ax'), dia: g('r-dia') },
-    l: { sph: g('l-sph'), cyl: g('l-cyl'), ax: document.getElementById('l-ax').disabled ? '' : g('l-ax'), dia: g('l-dia') },
+    r: eyeOn('r') ? { sph: g('r-sph'), cyl: g('r-cyl'), dia: g('r-dia') } : { sph: '', cyl: '', dia: '' },
+    l: eyeOn('l') ? { sph: g('l-sph'), cyl: g('l-cyl'), dia: g('l-dia') } : { sph: '', cyl: '', dia: '' },
     _prod: JSON.parse(JSON.stringify(selectedProd)),
   };
 }
@@ -1354,15 +1375,17 @@ function cancelCartItemEdit() {
 }
 
 function restoreRxValues(item) {
+  document.getElementById('eyes').value = item.eyes || 'both';
+  onEyesChange();
   ['r','l'].forEach(eye => {
     const src = item[eye];
+    if (!src.sph) return;
     document.getElementById(eye+'-sph').value = src.sph;
     refreshCylForSph(eye, { preferValue: parseFloat(src.cyl) });
     updateAxis(eye);
     updateDia(eye);
     const diaSel = document.getElementById(eye+'-dia');
     if (src.dia && [...diaSel.options].some(o => o.value === src.dia)) diaSel.value = src.dia;
-    if (src.ax) document.getElementById(eye+'-ax').value = src.ax;
   });
   document.getElementById('pairs').value = item.pairs || '1';
   document.getElementById('note').value = item.note || '';
@@ -1375,20 +1398,26 @@ function restoreRxValues(item) {
   updateRecapButtonState();
 }
 
+function resetQtyEyes() {
+  document.getElementById('pairs').value = '1';
+  document.getElementById('eyes').value = 'both';
+  onEyesChange();
+}
+
 function addToCartAndConfirm() {
   if (editingCartIndex !== null) {
     if (!currentSelectionValid()) return;
     CART[editingCartIndex] = buildCartItem();
     updateCartBadge();
     document.getElementById('note').value = '';
-    document.getElementById('pairs').selectedIndex = 0;
+    resetQtyEyes();
     goStep(3);
     return;
   }
   const item = addToCart();
   if (!item) return;
   document.getElementById('note').value = '';
-  document.getElementById('pairs').selectedIndex = 0;
+  resetQtyEyes();
   openAddCartModal();
 }
 
@@ -1437,17 +1466,16 @@ function cartItemHtml(item, i, readOnly) {
       <div class="cart-item-head">
         <div>
           <div class="cart-item-title">${mfrDisplayName(item.mfr)} — ${esc(item.name)}</div>
-          <div class="cart-item-sub">${esc(item.index)}${item.code && item.code !== '—' ? ' · ' + esc(item.code) : ''} · ${esc(item.coat)}${item.color ? ' · <strong>Barva: ' + esc(item.color) + '</strong>' : ''}${item.tint ? ' · <strong>Tónování: ' + esc(item.tint) + '</strong>' : ''}</div>
+          <div class="cart-item-sub">${esc(item.index)}${item.code && item.code !== '—' ? ' · ' + esc(item.code) : ''} · ${esc(item.coat)}${item.color ? ' · <strong>Barva: ' + esc(item.color) + '</strong>' : ''}${item.tint ? ' · <strong>Zabarvení: ' + esc(item.tint) + '</strong>' : ''}</div>
         </div>${actions}
       </div>
       <table class="rtable">
         <tr class="sub-hdr"><td></td><td>Pravé</td><td>Levé</td></tr>
         <tr><td>Sph</td><td>${esc(item.r.sph) || '—'}</td><td>${esc(item.l.sph) || '—'}</td></tr>
         <tr><td>Cyl</td><td>${esc(item.r.cyl) || '—'}</td><td>${esc(item.l.cyl) || '—'}</td></tr>
-        <tr><td>Osa</td><td>${item.r.ax ? esc(item.r.ax) + '°' : '—'}</td><td>${item.l.ax ? esc(item.l.ax) + '°' : '—'}</td></tr>
         <tr><td>Průměr</td><td>${item.r.dia ? 'Ø' + esc(item.r.dia) + ' mm' : '—'}</td><td>${item.l.dia ? 'Ø' + esc(item.l.dia) + ' mm' : '—'}</td></tr>
       </table>
-      <div class="cart-item-foot">Počet párů: <strong>${pairsLabel(item.pairs)}</strong>${item.note ? ' · Poznámka: ' + esc(item.note) : ''}</div>
+      <div class="cart-item-foot">${item.eyes === 'r' || item.eyes === 'l' ? 'Počet kusů' : 'Počet párů'}: <strong>${qtyLabel(item.pairs, item.eyes)}</strong>${item.note ? ' · Poznámka: ' + esc(item.note) : ''}</div>
     </div>
   `;
 }
@@ -1509,19 +1537,19 @@ function orderEmailHtml(order) {
   const th = 'padding:8px 10px;font:700 11px Arial,sans-serif;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;text-align:left;border-bottom:1px solid #e5e7eb;background:#f9fafb';
   const td = 'padding:8px 10px;font:14px Arial,sans-serif;color:#111827;border-bottom:1px solid #f1f5f9';
   const eye = (label, color) => `<span style="display:inline-block;width:22px;height:22px;border-radius:11px;background:${color};color:#ffffff;font:700 11px Arial,sans-serif;line-height:22px;text-align:center">${label}</span>`;
-  const row = (lbl, color, e) => `<tr><td style="${td}">${eye(lbl, color)}</td><td style="${td}">${esc(e.sph)}</td><td style="${td}">${esc(e.cyl)}</td><td style="${td}">${e.ax ? esc(e.ax) + '°' : '—'}</td><td style="${td}"><strong>Ø${esc(e.dia)}</strong></td></tr>`;
+  const row = (lbl, color, e) => `<tr><td style="${td}">${eye(lbl, color)}</td><td style="${td}">${esc(e.sph)}</td><td style="${td}">${esc(e.cyl)}</td><td style="${td}"><strong>Ø${esc(e.dia)}</strong></td></tr>`;
   return order.items.map((it, i) => `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:10px;margin:0 0 16px;border-collapse:separate;overflow:hidden">
   <tr><td style="padding:14px 16px;background:#ffffff">
     <div style="font:700 11px Arial,sans-serif;color:#2563eb;text-transform:uppercase;letter-spacing:.5px">Položka ${i+1} · ${mfrDisplayName(it.mfr)}</div>
     <div style="font:700 16px Arial,sans-serif;color:#111827;margin:4px 0 2px">${esc(it.name)}</div>
-    <div style="font:13px Arial,sans-serif;color:#6b7280">Kód <strong style="color:#111827">${esc(it.code)}</strong> · index ${esc(it.index)} · ${esc(it.coat)} · <strong style="color:#111827">${pairsLabel(it.pairs)}</strong>${it.color ? ` · Barva: <strong style="color:#111827">${esc(it.color)}</strong>` : ''}${it.tint ? ` · Tónování: <strong style="color:#111827">${esc(it.tint)}</strong>` : ''}</div>
+    <div style="font:13px Arial,sans-serif;color:#6b7280">Kód <strong style="color:#111827">${esc(it.code)}</strong> · index ${esc(it.index)} · ${esc(it.coat)} · <strong style="color:#111827">${qtyLabel(it.pairs, it.eyes)}</strong>${it.color ? ` · Barva: <strong style="color:#111827">${esc(it.color)}</strong>` : ''}${it.tint ? ` · Zabarvení: <strong style="color:#111827">${esc(it.tint)}</strong>` : ''}</div>
   </td></tr>
   <tr><td style="padding:0">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse">
-      <tr><th style="${th}">Oko</th><th style="${th}">Sph</th><th style="${th}">Cyl</th><th style="${th}">Osa</th><th style="${th}">Průměr</th></tr>
-      ${row('P', '#2563eb', it.r)}
-      ${row('L', '#7c3aed', it.l)}
+      <tr><th style="${th}">Oko</th><th style="${th}">Sph</th><th style="${th}">Cyl</th><th style="${th}">Průměr</th></tr>
+      ${it.eyes === 'l' ? '' : row('P', '#2563eb', it.r)}
+      ${it.eyes === 'r' ? '' : row('L', '#7c3aed', it.l)}
     </table>
   </td></tr>
   ${it.note ? `<tr><td style="padding:10px 16px;background:#fffbeb;font:13px Arial,sans-serif;color:#92400e;border-top:1px solid #fde68a"><strong>Poznámka:</strong> ${esc(it.note)}</td></tr>` : ''}
@@ -1529,9 +1557,9 @@ function orderEmailHtml(order) {
 }
 function orderEmailText(order) {
   return order.items.map((it, i) =>
-    `${i+1}. ${mfrDisplayName(it.mfr)} — ${it.name} (kód ${it.code}), ${pairsLabel(it.pairs)}${it.color ? ', barva ' + it.color : ''}${it.tint ? ', tónování ' + it.tint : ''}\n` +
-    `   P: Sph ${it.r.sph} Cyl ${it.r.cyl} Osa ${it.r.ax || '—'} Ø${it.r.dia}\n` +
-    `   L: Sph ${it.l.sph} Cyl ${it.l.cyl} Osa ${it.l.ax || '—'} Ø${it.l.dia}` +
+    `${i+1}. ${mfrDisplayName(it.mfr)} — ${it.name} (kód ${it.code}), ${qtyLabel(it.pairs, it.eyes)}${it.color ? ', barva ' + it.color : ''}${it.tint ? ', zabarvení ' + it.tint : ''}\n` +
+    [it.eyes === 'l' ? '' : `   P: Sph ${it.r.sph} Cyl ${it.r.cyl} Ø${it.r.dia}`,
+     it.eyes === 'r' ? '' : `   L: Sph ${it.l.sph} Cyl ${it.l.cyl} Ø${it.l.dia}`].filter(Boolean).join('\n') +
     (it.note ? `\n   Poznámka: ${it.note}` : '')
   ).join('\n\n');
 }
@@ -1595,7 +1623,7 @@ async function submitOrder() {
 
   /* do databáze a e-mailu jde jen to podstatné (bez interního _prod) */
   const items = CART.map(it => ({ mfr: it.mfr, name: it.name, code: it.code, index: it.index, coat: it.coat,
-    pairs: it.pairs, color: it.color || '', tint: it.tint || '', note: it.note, r: Object.assign({}, it.r), l: Object.assign({}, it.l) }));
+    pairs: it.pairs, eyes: it.eyes || 'both', color: it.color || '', tint: it.tint || '', note: it.note, r: Object.assign({}, it.r), l: Object.assign({}, it.l) }));
 
   let order;
   try {
@@ -1646,13 +1674,13 @@ function resetOrder() {
   updateCartBadge();
   document.getElementById('btn-to-rx').disabled = true;
   document.getElementById('note').value = '';
+  resetQtyEyes();
   document.getElementById('r-sph').innerHTML = sphOptions();
   document.getElementById('l-sph').innerHTML = sphOptions();
   document.getElementById('r-cyl').innerHTML = cylOptions();
   document.getElementById('l-cyl').innerHTML = cylOptions();
   ['r-sph','l-sph'].forEach(id => { const s = document.getElementById(id); for (let i=0;i<s.options.length;i++) if(s.options[i].value==='0.00'){s.selectedIndex=i;break;} });
   ['r-cyl','l-cyl'].forEach(id => document.getElementById(id).selectedIndex = 0);
-  ['r-ax','l-ax'].forEach(id => { const s = document.getElementById(id); s.selectedIndex=0; s.disabled=true; });
   document.getElementById('r-dia-warn').style.display = 'none';
   document.getElementById('l-dia-warn').style.display = 'none';
   goStep(0);
