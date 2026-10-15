@@ -12,11 +12,11 @@
 })();
 </script>
 <!-- Firebase (přihlášení + databáze objednávek) a EmailJS (odesílání e-mailů).
-     Pokud se knihovny nenačtou nebo není vyplněná konfigurace níže, appka běží v DEMO režimu. -->
+     Produkční přihlášení vyžaduje dostupné Firebase; při výpadku se žádný demo účet nevytváří. -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -488,7 +488,7 @@
       <div class="topbar">
         <button class="menu-toggle" onclick="openMobileNav()" title="Menu" aria-label="Otevřít menu">☰</button>
         <div class="topbar-title" id="topbar-title">Nová objednávka</div>
-        <span class="demo-flag" id="demo-flag" style="display:none" title="Firebase / EmailJS nejsou nastavené — objednávky se nikam neukládají ani neposílají">Demo</span>
+        <span class="demo-flag" id="demo-flag" style="display:none" title="E-mailová služba není dostupná">E-maily nejsou dostupné</span>
         <div class="cart-badge" id="cart-badge" onclick="goToCart()" style="display:none">🛒 <span id="cart-count">0</span></div>
         <div class="topbar-meta" id="topbar-meta"></div>
       </div>
@@ -701,8 +701,7 @@
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
    KONFIGURACE — vyplň podle návodu „Nastavení Firebase + EmailJS“.
-   Dokud tu zůstane „DOPLNIT“, appka běží v DEMO režimu: přihlášení je
-   simulované, objednávky se nikam neukládají a e-maily se neposílají.
+   Pokud konfigurace chybí nebo přihlášení není dostupné, aplikace přihlášení zablokuje.
    Údaje níže nejsou tajné (jsou vidět v každém prohlížeči) — bezpečnost
    drží pravidla Firestore a to, že účty zakládá jen administrátor.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -715,12 +714,7 @@ const FIREBASE_CONFIG = {
   appId: "1:216650953831:web:43feebd9b95df0bbb910c2",
   measurementId: "G-412XBG3KK6"
 };
-const EMAILJS_CONFIG = {
-  publicKey: "8PvfIuLDpHtEhH_Mr",
-  serviceId: "service_5ujcwde",
-  templateOrder: "template_qkp798h",    /* e-mail s objednávkou → ORDER_RECIPIENT */
-  templateConfirm: "template_9xuqm3i"   /* potvrzení → přihlášený zástupce */
-};
+const ORDERS_API = "https://europe-west1-objednavkovy-system-46cca.cloudfunctions.net/ordersApi";
 /* Kam chodí objednávky */
 const ORDER_RECIPIENT = "j.kaiser@mi-optics.cz";
 /* Jména zástupců podle e-mailu (Firebase ukládá jen e-mail). Nový zástupce = nový řádek. */
@@ -731,15 +725,19 @@ const REPS = {
   "bohmanova@mi-optics.cz": { name: "Markéta Bohmanová" }
 };
 
-const FB_ENABLED   = !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLNIT") && typeof firebase !== "undefined";
-const MAIL_ENABLED = !String(EMAILJS_CONFIG.publicKey).startsWith("DOPLNIT") && typeof emailjs !== "undefined";
+const FB_ENABLED = !String(FIREBASE_CONFIG.apiKey).startsWith("DOPLNIT") && typeof firebase !== "undefined";
+const MAIL_ENABLED = true;
 let fbAuth = null, fbDb = null;
+let fbReady = false;
 if (FB_ENABLED) {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  fbAuth = firebase.auth();
-  fbDb = firebase.firestore();
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+    fbReady = true;
+  } catch (e) { console.error('Přihlášení není dostupné:', e.code || 'initialization-failed'); }
 }
-if (MAIL_ENABLED) emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+
 
 /* Ošetření textu vkládaného do HTML (poznámky zadává uživatel) */
 function esc(s) {
@@ -1570,57 +1568,49 @@ function orderEmailText(order) {
   ).join('\n\n');
 }
 
+let pendingOrderRequest = null;
+let submitBusy = false;
+
 async function sendOrderEmails(order) {
-  if (!MAIL_ENABLED) return { skipped: true };
-  const base = {
-    order_no: order.orderNo,
-    order_date: fmtDate(order.dateObj),
-    rep_name: order.repName,
-    rep_email: order.repEmail,
-    items_count: order.items.length,
-    total_pairs: totalPairs(order.items),
-    items_html: orderEmailHtml(order),
-    items_text: orderEmailText(order),
-  };
-  const res = await Promise.allSettled([
-    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateOrder,   Object.assign({ to_email: ORDER_RECIPIENT }, base)),
-    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateConfirm, Object.assign({ to_email: order.repEmail }, base)),
-  ]);
-  res.forEach(r => { if (r.status === 'rejected') console.error('EmailJS:', r.reason); });
-  return { orderOk: res[0].status === 'fulfilled', confirmOk: res[1].status === 'fulfilled' };
+  return order.serverMail;
 }
 
-/* Uloží objednávku; číslo objednávky je průběžné (counters/orders), přiděleno v transakci */
+/* Server assigns identity, order number and time; only it sends mail. */
 async function saveOrder(items) {
-  const base = {
-    uid: currentUser.uid,
-    repEmail: currentUser.email,
-    repName: currentUser.name,
-    status: 'wait',
-    items: items,
-  };
-  if (!FB_ENABLED) {
-    const no = String(demoOrderSeq++);
-    const order = Object.assign({ id: 'demo-' + no, orderNo: no, dateObj: new Date() }, base);
-    ORDERS.unshift(order);
-    return order;
+  if (!fbReady || !currentUser || !fbAuth.currentUser || fbAuth.currentUser.uid !== currentUser.uid)
+    throw new Error('Přihlaste se znovu.');
+  const uid = currentUser.uid, generation = authGeneration, authUser = fbAuth.currentUser;
+  const fingerprint = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(items))))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  const key = 'miopt_pending_order_' + uid;
+  let stored = pendingOrderRequest;
+  try { stored = JSON.parse(sessionStorage.getItem(key)) || stored; } catch(e) {}
+  if (!stored || stored.uid !== uid || stored.fingerprint !== fingerprint)
+    stored = { uid, fingerprint, requestId: crypto.randomUUID() };
+  pendingOrderRequest = stored;
+  try { sessionStorage.setItem(key, JSON.stringify(stored)); } catch(e) {}
+  const token = await authUser.getIdToken();
+  if (!currentUser || currentUser.uid !== uid || authGeneration !== generation) throw new Error('Přihlášení se změnilo.');
+  let response;
+  try {
+    response = await fetch(ORDERS_API, { method:'POST', cache:'no-store', credentials:'omit',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+      body:JSON.stringify({action:'create',requestId:stored.requestId,items}),signal:AbortSignal.timeout(210000) });
+  } catch(e) { throw new Error('Spojení se přerušilo. Zkuste znovu stejný košík — server zabrání dvojímu uložení.'); }
+  let result;
+  try { result = await response.json(); } catch(e) { throw new Error('Server vrátil neplatnou odpověď. Zkuste znovu stejný košík.'); }
+  if (!response.ok) throw new Error(result.error || 'Server objednávku odmítl.');
+  if (!result.order || result.order.uid !== uid || !result.mail) throw new Error('Neplatná odpověď serveru.');
+  const order = Object.assign({}, result.order, {dateObj:new Date(result.order.createdAt),serverMail:result.mail});
+  if (currentUser && currentUser.uid === uid && authGeneration === generation) {
+    ORDERS = [order, ...ORDERS.filter(x => x.id !== order.id)];
   }
-  const counterRef = fbDb.collection('counters').doc('orders');
-  const orderRef = fbDb.collection('orders').doc();
-  const no = await fbDb.runTransaction(async tx => {
-    const snap = await tx.get(counterRef);
-    const next = snap.exists && snap.data().next ? snap.data().next : 1001;
-    tx.set(counterRef, { next: next + 1 });
-    tx.set(orderRef, Object.assign({ orderNo: String(next), createdAt: firebase.firestore.FieldValue.serverTimestamp() }, base));
-    return String(next);
-  });
-  const order = Object.assign({ id: orderRef.id, orderNo: no, dateObj: new Date() }, base);
-  ORDERS.unshift(order);
   return order;
 }
 
 async function submitOrder() {
-  if (!CART.length || !currentUser) return;
+  if (!CART.length || !currentUser || submitBusy) return;
+  const submissionGeneration = authGeneration;
+  submitBusy = true;
   const btn = document.getElementById('btn-submit-order');
   const errBox = document.getElementById('submit-error');
   errBox.style.display = 'none';
@@ -1635,7 +1625,9 @@ async function submitOrder() {
   try {
     order = await saveOrder(items);
   } catch (e) {
-    console.error('Uložení objednávky selhalo:', e);
+    if (authGeneration !== submissionGeneration) return;
+    submitBusy = false;
+    console.error('Uložení objednávky selhalo:', e.message);
     errBox.textContent = 'Objednávku se nepodařilo uložit (' + (e.code || e.message || e) + '). Košík zůstal zachovaný — zkuste to prosím znovu.';
     errBox.style.display = 'block';
     btn.disabled = false;
@@ -1643,27 +1635,31 @@ async function submitOrder() {
     return;
   }
 
-  const mail = await sendOrderEmails(order);
+  if (!currentUser || currentUser.uid !== order.uid || authGeneration !== submissionGeneration) return;
+  let mail;
+  try { mail = await sendOrderEmails(order); }
+  catch (e) { mail = { orderOk: false, confirmOk: false }; }
+  if (!currentUser || currentUser.uid !== order.uid || authGeneration !== submissionGeneration) return;
   btn.disabled = false;
   btn.textContent = '✓ Odeslat objednávku';
 
   const msg = document.getElementById('ok-msg');
   msg.classList.remove('ok-warn');
-  document.getElementById('ok-title').textContent = `Objednávka #${order.orderNo} odeslána!`;
-  if (!FB_ENABLED) {
-    msg.textContent = 'DEMO režim — objednávka se nikam neuložila ani neodeslala (Firebase/EmailJS nejsou nastavené).';
-    msg.classList.add('ok-warn');
-  } else if (mail.skipped) {
-    msg.textContent = 'Objednávka je uložená v historii. E-maily se neposlaly — EmailJS zatím není nastavené.';
+  document.getElementById('ok-title').textContent = `Objednávka #${order.orderNo} uložená!`;
+  if (mail.skipped) {
+    msg.textContent = 'Objednávka je uložená v historii, ale odesílání e-mailů není dostupné.';
     msg.classList.add('ok-warn');
   } else if (mail.orderOk && mail.confirmOk) {
-    msg.textContent = `Objednávka je uložená v historii a odeslaná na ${ORDER_RECIPIENT}. Potvrzení přijde na ${order.repEmail}.`;
+    msg.textContent = `Objednávka je uložená v historii. Poštovní server přijal e-mail pro ${ORDER_RECIPIENT} a potvrzení pro ${order.repEmail}.`;
   } else {
     const failed = [!mail.orderOk && `objednávka na ${ORDER_RECIPIENT}`, !mail.confirmOk && `potvrzení na ${order.repEmail}`].filter(Boolean).join(' a ');
     msg.textContent = `Objednávka je uložená v historii, ale nepodařilo se odeslat: ${failed}. Dejte prosím vědět e-mailem nebo telefonem.`;
     msg.classList.add('ok-warn');
   }
 
+  submitBusy = false;
+  pendingOrderRequest = null;
+  try { sessionStorage.removeItem('miopt_pending_order_' + order.uid); } catch(e) {}
   document.getElementById('s3').style.display = 'none';
   document.getElementById('s-ok').style.display = 'block';
   document.getElementById('topbar-meta').textContent = '';
@@ -1706,6 +1702,8 @@ function showView(v) {
 
 /* ═══ Přihlášení ═══ */
 let currentUser = null;   /* { uid, email, name } */
+let authGeneration = 0;
+let historyRequest = 0;
 
 function repNameFor(email) {
   const r = REPS[(email || '').toLowerCase()];
@@ -1739,8 +1737,8 @@ async function doLogin() {
   const pass = document.getElementById('login-pass').value;
   showLoginError('');
   if (!email || !pass) { showLoginError('Vyplňte e-mail i heslo.'); return; }
-  if (!FB_ENABLED) {
-    enterApp({ uid: 'demo', email: email.toLowerCase() });
+  if (!fbReady) {
+    showLoginError('Přihlášení není dostupné. Obnovte stránku nebo zkontrolujte připojení.');
     return;
   }
   const btn = document.getElementById('login-btn');
@@ -1756,6 +1754,15 @@ async function doLogin() {
 }
 
 function enterApp(user) {
+  submitBusy = false;
+  document.getElementById('btn-submit-order').textContent = '✓ Odeslat objednávku';
+  authGeneration++;
+  historyRequest++;
+  ORDERS = [];
+  renderHistoryTable();
+  if (currentUser && currentUser.uid !== user.uid) resetOrder();
+  closeOrderModal();
+  document.getElementById('om-items').textContent = '';
   currentUser = { uid: user.uid, email: (user.email || '').toLowerCase(), name: repNameFor(user.email) };
   document.getElementById('rep-name').textContent = currentUser.name;
   document.getElementById('rep-email').textContent = currentUser.email;
@@ -1766,11 +1773,19 @@ function enterApp(user) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   historyLoaded = false;
-  if (!FB_ENABLED) ORDERS = demoOrders();
+
   updateStepLocks();
 }
 
 function leaveApp() {
+  submitBusy = false;
+  pendingOrderRequest = null;
+  authGeneration++;
+  historyRequest++;
+  closeOrderModal();
+  closeAddCartModal();
+  ['om-title','om-id','om-date','om-rep','om-status','om-items'].forEach(id => document.getElementById(id).textContent = '');
+  ['rep-name','rep-email','prof-name','prof-email','user-avatar'].forEach(id => document.getElementById(id).textContent = '');
   currentUser = null;
   ORDERS = [];
   historyLoaded = false;
@@ -1782,15 +1797,15 @@ function leaveApp() {
 }
 
 function doLogout() {
-  if (FB_ENABLED) fbAuth.signOut();   /* onAuthStateChanged(null) → leaveApp */
+  if (fbReady) fbAuth.signOut();   /* onAuthStateChanged(null) → leaveApp */
   else leaveApp();
 }
 
 (function initAuth() {
   const note = document.getElementById('login-note');
-  if (!FB_ENABLED) {
-    document.getElementById('demo-flag').style.display = 'inline-block';
-    note.innerHTML = '<span class="demo-flag">Demo</span><br>Firebase zatím není nastavený — přihlášení je simulované (libovolný e-mail a heslo).';
+  if (!fbReady) {
+    note.textContent = 'Přihlášení není dostupné. Obnovte stránku nebo zkontrolujte připojení.';
+    document.getElementById('login-btn').disabled = true;
     return;
   }
   if (!MAIL_ENABLED) document.getElementById('demo-flag').style.display = 'inline-block';
@@ -1840,37 +1855,24 @@ if (window.matchMedia) {
 const STATUS_LABEL = { wait: 'Čeká', ship: 'Odesláno', done: 'Doručeno' };
 let ORDERS = [];
 let historyLoaded = false;
-let demoOrderSeq = 3125;
-
-/* Ukázková data jen pro DEMO režim (bez Firebase) */
-function demoOrders() {
-  const mk = (no, d, status, name, code, index, coat, pairs, note, r, l) =>
-    ({ id: 'demo-' + no, orderNo: no, dateObj: new Date(d), status, repName: currentUser ? currentUser.name : '', repEmail: currentUser ? currentUser.email : '',
-       items: [{ mfr: 'mi', name, code, index, coat, pairs: String(pairs), note, r, l }] });
-  return [
-    mk('3124', '2026-09-13T10:12', 'wait', 'Plast 1,61 Super AR', '305.014', '1,61', 'Tvrzení + Super AR', 1, '',
-      {sph:'-2.25', cyl:'+0.75', ax:'90', dia:'65'}, {sph:'-2.00', cyl:'+0.50', ax:'85', dia:'65'}),
-    mk('3123', '2026-09-11T14:40', 'ship', 'Plast 1,56 Digital Lotus Max', '310.083', '1,56', 'BLC technologie + Lotus Max', 1, '',
-      {sph:'+1.50', cyl:'0.00', ax:'', dia:'70'}, {sph:'+1.75', cyl:'+0.25', ax:'170', dia:'70'}),
-    mk('3122', '2026-09-10T09:05', 'ship', 'Plast 1,5 Super AR', '305.011', '1,5', 'Tvrzení + Super AR', 1, 'Spěchá, prosím expres.',
-      {sph:'-0.75', cyl:'0.00', ax:'', dia:'60'}, {sph:'-1.00', cyl:'0.00', ax:'', dia:'60'}),
-    mk('3121', '2026-09-08T16:22', 'done', 'Plast Photoactive 1,56 Super AR', '305.023', '1,56', 'Fototropní (hnědá/šedá 9–70 %) + Super AR', 2, '',
-      {sph:'-3.50', cyl:'+1.25', ax:'15', dia:'65'}, {sph:'-3.25', cyl:'+1.00', ax:'175', dia:'65'}),
-  ];
-}
-
 function histMessage(text) {
   document.getElementById('hist-tbody').innerHTML = `<tr class="hist-msg"><td colspan="5">${text}</td></tr>`;
 }
 
 async function loadHistory() {
   if (!currentUser) return;
-  if (!FB_ENABLED || historyLoaded) { renderHistoryTable(); return; }
+  if (!fbReady) return;
+  if (historyLoaded) { renderHistoryTable(); return; }
+  const uid = currentUser.uid;
+  const generation = authGeneration;
+  const request = ++historyRequest;
+  const stillCurrent = () => currentUser && currentUser.uid === uid && authGeneration === generation && historyRequest === request;
   histMessage('Načítám objednávky…');
   try {
     /* Filtrujeme jen podle uid a řadíme až v prohlížeči — kombinace where+orderBy by
        ve Firestore vyžadovala ruční založení složeného indexu. */
-    const snap = await fbDb.collection('orders').where('uid', '==', currentUser.uid).get();
+    const snap = await fbDb.collection('orders').where('uid', '==', uid).get();
+    if (!stillCurrent()) return;
     ORDERS = snap.docs.map(doc => {
       const d = doc.data();
       return Object.assign({ id: doc.id }, d, { dateObj: d.createdAt ? d.createdAt.toDate() : new Date() });
@@ -1878,6 +1880,7 @@ async function loadHistory() {
     historyLoaded = true;
     renderHistoryTable();
   } catch (e) {
+    if (!stillCurrent()) return;
     console.error('Načtení historie selhalo:', e);
     histMessage('Historii se nepodařilo načíst (' + esc(e.code || e.message || e) + ').');
   }
